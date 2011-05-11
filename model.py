@@ -14,7 +14,9 @@
 ##
 ##  You should have received a copy of the GNU Lesser General Public 
 ##  License along with Platane. 
-##  If not, see <http://www.gnu.org/licenses/>.import yaml
+##  If not, see <http://www.gnu.org/licenses/>.
+
+import yaml
 
 # interface 
 
@@ -22,18 +24,38 @@
 Returns the expected type for this path:
 A dictionary containing:
 - An 'attributes' dictionary for object types (name:type)
-- A 'children' string for list types
+- A 'children' list containing child types
 Returns None if path does not match the schema
 '''
 def get_type(path):
-    for i in path.split('/'):
-        
+    element = root
+    attributes = {}
+    children = 0
+    for level in path.split('/'):        
+        if is_list(element):
+            
+            if element['children'].has_key(level):
+                element = element['children'][level]
+                children = [
+            else:
+                return None
+                
     
 def create(path):
     pass
     
 def load(path):
     pass
+
+# utilities
+
+def is_list(element):
+    return element.has_key('children')
+    
+def is_object(element):
+    return element.has_key('attributes')
+
+
 
 # filesystem implementation
 
