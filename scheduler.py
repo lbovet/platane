@@ -280,10 +280,10 @@ if __name__ == '__main__':
     tasks = [ 
         { 'name' : 'absence', 'priority':-1, 'effort': 3, 'from':datetime(2011, 05, 24), 'to':datetime(2011, 05, 26) },
         { 'name' : 'architecture', 'effort': 5, 'from':datetime(2011, 05, 18), 'to':datetime(2011, 06, 8) },        
-        { 'name' : 'management', 'load': 0.25, 'from':datetime(2011, 05, 18), 'to':datetime(2011, 06, 10) },        
-        { 'name' : 'project1', 'priority': 0, 'effort': 3.5, 'from':datetime(2011, 05, 20), 'to':datetime(2011, 06, 13) },
-        { 'name' : 'project2', 'effort': 3.5, 'from':datetime(2011, 05, 23), 'to':datetime(2011, 06, 10) },
-        { 'name' : 'partial time', 'priority': -1, 'load': 0.1, 'from':datetime(2011, 05, 18), 'to':datetime(2011, 06, 13) }]
+        { 'name' : 'management', 'load': 0.1, 'from':datetime(2011, 05, 18), 'to':datetime(2011, 06, 10) },        
+        { 'name' : 'project1',  'effort': 3.5, 'from':datetime(2011, 05, 20), 'to':datetime(2011, 06, 13) },
+        { 'name' : 'project2', 'priority': 1, 'effort': 3.5, 'from':datetime(2011, 05, 23), 'to':datetime(2011, 06, 13) },
+        { 'name' : 'partial time', 'priority': -1, 'load': 0.2, 'from':datetime(2011, 05, 18), 'to':datetime(2011, 06, 13) }]
         
          
     start, slots, sched = schedule_tasks(tasks)
