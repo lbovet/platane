@@ -18,6 +18,13 @@ Dreams:
 * Adapters in Jira and similar tools to send tasks to Platane
 * Adapter for Outlook to send tasks/holidays to Platane
 
+Requirements
+------------
+
+* Python 2.6
+* Cheetah template engine: easy_install cheetah
+* pyYAML parser/emitter: easy_install pyyaml
+
 Installation & Usage
 --------------------
 
