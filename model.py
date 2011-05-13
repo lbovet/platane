@@ -23,20 +23,22 @@ import yaml
 ''''
 Returns the expected type for this path:
 A dictionary containing:
+- 
 - An 'attributes' dictionary for object types (name:type)
 - A 'children' list containing child types
 Returns None if path does not match the schema
 '''
 def get_type(path):
-    element = root
+    element = schema
     attributes = {}
     children = 0
+    path='root'+path
     for level in path.split('/'):        
+        print element, level
         if is_list(element):
-            
             if element['children'].has_key(level):
                 element = element['children'][level]
-                children = [
+                children = sorted(element['children'].keys())
             else:
                 return None
                 
@@ -60,5 +62,6 @@ def is_object(element):
 # filesystem implementation
 
 root = 'data'
+schema = yaml.load( file(root+'/schema', 'r'))
 
-schema = yaml.load(root+'/schema')
+print get_type('/units')

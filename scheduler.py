@@ -188,8 +188,10 @@ def itemize(tasks, resolution, work=True):
                 item['load'] = t['load']
             if t['from'] >= d:
                 item['from'] = i
+            if t['to'] < start:
+                item['to'] = 0
             if t['to'] >= d:
-                item['to'] = i      
+                item['to'] = i                  
         i += 1
         slots.append(slot_size(resolution, work))
     return start, slots, items
@@ -275,6 +277,24 @@ def slot_size(resolution, work=True):
         return 5.0 if work else 7.0
         
         
+'''
+Renders a schedule
+'''
+def render(tasks):
+
+    for task in tasks:
+        if not task.has_key('from'):
+            task['from'] = datetime.now()
+        if not task.has_key('to'):
+            task['to'] = datetime.now()+timedelta(90)   
+
+    start, slots, sched = schedule_tasks(tasks)
+    dates = [ c for c in calendar(start, size=len(slots)) ]
+    slots = [ 1.0-v for v in slots ]
+
+    import visualize
+    return visualize.render(dates, slots, sched)
+        
 if __name__ == '__main__':
             
     tasks = [ 
@@ -285,10 +305,4 @@ if __name__ == '__main__':
         { 'name' : 'project2', 'priority': 1, 'effort': 3.5, 'from':datetime(2011, 05, 23), 'to':datetime(2011, 06, 13) },
         { 'name' : 'partial time', 'priority': -1, 'load': 0.2, 'from':datetime(2011, 05, 18), 'to':datetime(2011, 06, 13) }]
         
-         
-    start, slots, sched = schedule_tasks(tasks)
-    dates = [ c for c in calendar(start, size=len(slots)) ]
-    slots = [ 1.0-v for v in slots ]
-
-    import visualize
-    print visualize.render(dates, slots, sched)
+    print render(tasks)
