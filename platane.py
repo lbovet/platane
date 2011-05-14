@@ -16,48 +16,36 @@
 ##  License along with Platane. 
 ##  If not, see <http://www.gnu.org/licenses/>.
 
-import os, thread, restlite
+import restlite                  
+import model
 
-tree =   ('root', 
-            ( 'units', (
-                ( 'unit',
-                    ( 'IT121',
-                        ( 'people', (
-                            ( 'person',
-                                ( 'bovetl',
-                                    ( 'tasks', (
-                                        ( 'task',
-                                            ( 'WGAT-73', (
-                                                    ( 'priority', 0 ),
-                                                    ( 'type', 'workgroup'),
-                                                    ( 'due', '20.07.2011'),
-                                            )),
-                                        ),
-                                    )),
-                                ),
-                            ),
-                        )),
-                    ),
-                )),
-            ),
-        )
-                                
+restlite._debug = True
 
 @restlite.resource
 def root():
     def GET(request):
-        return request.response(tree)
+        try:
+            return str(model.load(get_path(request)))
+        except model.NotFoundException as e:
+            raise restlite.Status, '404 '+str(e)
+        
+    def PUT(request, entity):
+        print "PUT "+entity
+        return "hello"
+    def POST(request, entity):
+        print "POST "+entity
+        return "hello"
+    def DELETE(request):
+        print "GET"
+        return "hello"        
     return locals()
 
-# all the routes
+def get_path(request):    
+    return request['wsgiorg.routing_args']['path']
 
 routes = [
-    (r'GET,PUT,POST /(?P<type>((xml)|(plain)))/(?P<path>.*)', 'GET,PUT,POST /%(path)s', 'ACCEPT=text/%(type)s'),
-    (r'GET,PUT,POST /(?P<type>((json)))/(?P<path>.*)', 'GET,PUT,POST /%(path)s', 'ACCEPT=application/%(type)s'),
-    (r'GET /root', root),    
+    (r'GET,PUT,POST,DELETE /(?P<path>.*)', root),    
 ]        
-
-# launch the server on port 8000
     
 if __name__ == '__main__':
     import sys

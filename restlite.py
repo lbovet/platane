@@ -164,24 +164,6 @@ def xml(value):
         return ''.join(xml(x) for x in value)
     else:
         return str(value) if value is not None else None
-
-def html(value):
-    '''The function converts the supplied value to HTML representation. It assumes the unified list format of value.
-    Typically you just call represent(value, type=request['ACCEPT']) instead of manually invoking this method.
-    To be consistent with str(obj) function which uses obj.__str__() method if available, xml() uses obj._html_()
-    method if available on value. Otherwise it checks obj._list_() method if available to get the unified list format.
-    Otherwise it assumes that the value is in unified list format. The _html_ and _list_ semantics allow you to 
-    customize the HTML representation of your object, if needed.
-    '''
-    if hasattr(value, '_html_') and callable(value._html_): return value._html_()
-    if hasattr(value, '_list_') and callable(value._list_): value = value._list_()
-    if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], basestring):
-        if value[1] is None: return '<a href="%s">%s</a>'%(value[0],%value[0])
-        else: return '<h3>%s</h3>%s'%(value[0], xml(value[1]))
-    elif isinstance(value, list) or isinstance(value, tuple):
-        return '<ul><li>'+('</li></li>'.join(html(x) for x in value))+'</li></ul>'
-    else:
-        return str(value) if value is not None else None
         
 def prettyxml(value):
     '''This function is similar to xml except that it invokes minidom's toprettyxml() function. Note that due to the
@@ -210,7 +192,7 @@ def represent(value, type='*/*'):
     '''
     types = map(lambda x: x.lower(), re.split(r'[, \t]+', type))
     if '*/*' in types: types.append(defaultType)
-    for type, func in (('application/json', tojson), ('text/xml', xml), ('text/plain', str), ('text/html', html)):
+    for type, func in (('application/json', tojson), ('text/xml', xml), ('text/plain', str)):
         if type in types: return (type, func(value))
     return ('application/octet-stream', str(value))
 

@@ -82,7 +82,7 @@ def create(path):
     if d:
         fs_create(path, d)
     else:
-        raise Exception('Invalid path '+path)
+        raise NotFoundException('Invalid path '+path)
         
 '''
 Loads the attributes or items of given path.
@@ -100,7 +100,7 @@ def load(path):
             result = check_attributes(result, d['attributes'])
         return result
     else:
-        raise Exception('Invalid path: '+path)
+        raise NotFoundException('Invalid path: '+path)
 
 '''
 Save the attributes on an existing path.
@@ -112,7 +112,7 @@ def save(path, attributes):
         attributes = check_attributes(attributes, d['attributes'])
         fs_save(path, attributes, d)
     else:
-        raise Exception('Invalid path or non-leaf path: '+path)
+        raise NotFoundException('Invalid path or non-leaf path: '+path)
 
 '''
 Delete a path.
@@ -123,7 +123,10 @@ def delete(path):
     if d and describe('/'.join(path.split('/')[:-1]))['type'] == 'list':
         fs_delete(path, d)      
     else:
-        raise Exception('Invalid path or not deletable: '+path)
+        raise NotFoundException('Invalid path or not deletable: '+path)
+
+class NotFoundException(Exception):
+    pass
 
 # utilities
 
@@ -132,7 +135,7 @@ def normalize(path):
     path = path.replace('..', '')
     while path.find('//') > -1:
         path.replace('//', '/')
-    if path[-1] == '/':
+    if len(path) > 0 and path[-1] == '/':
         path = path[:-1]
     if len(path) == 0:
         path = '/'        
@@ -183,13 +186,13 @@ def fs_load(path, d):
         if d['type'] == 'leaf':
             return yaml.load(file(root+path))
     else:
-        raise Exception('Path not found: '+path)
+        raise NotFoundException('Path not found: '+path)
 
 def fs_save(path, attributes, d):
     if os.path.exists(root+path):
         yaml.dump(attributes, file(root+path, "w"));
     else:
-        raise Exception('Path not found: '+path)    
+        raise NotFoundException('Path not found: '+path)    
 
 def fs_delete(path):
     pass
