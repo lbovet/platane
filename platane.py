@@ -37,7 +37,7 @@ def do_get(env, start_response):
         else:
             return str(list_template(searchList=[ { 'list' : m } ]))
     except model.NotFoundException as e:
-        raise restlite.Status, '404 '+str(e)
+        raise restlite.Status, '404 Not Found'
 
 def do_put(env, start_response):
     pass
