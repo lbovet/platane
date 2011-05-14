@@ -29,6 +29,7 @@ A dictionary containing:
 Returns None if path does not match the schema
 '''
 def describe(path):
+    path = normalize(path)
     element = schema['root']
     path='root'+path
     attributes = None
@@ -97,7 +98,7 @@ def load(path):
         else:
             result = load_internal(path, d)        
         if d['type'] == 'leaf':
-            result = check_attributes(result, d['attributes'])
+            check_attributes(result, d['attributes'])
         return result
     else:
         raise NotFoundException('Invalid path: '+path)
@@ -109,7 +110,7 @@ def save(path, attributes):
     path = normalize(path)
     d = describe(path)
     if d and d['type'] == 'leaf':
-        attributes = check_attributes(attributes, d['attributes'])
+        check_attributes(attributes, d['attributes'])
         save_internal(path, attributes, d)
     else:
         raise NotFoundException('Invalid path or non-leaf path: '+path)
@@ -143,9 +144,15 @@ def normalize(path):
         path = '/' + path        
     return path
 
+defaults = { 'int': 0,
+             'date': None,
+             'str': "",
+             'float': 0.0 }
+
 def check_attributes(attr_dict, attr_schema):
-    # TODO: implement validation, default values...
-    return attr_dict
+    for attr in attr_schema.keys():
+        if not attr in attr_dict.keys():
+            attr_dict[attr] = defaults[attr_schema[attr]]    
 
 def as_dict(element):
     if element.has_key('dict'):
@@ -199,7 +206,7 @@ def delete_internal(path):
 
 # test
 
-if __name__ == '__main__':
+if __name__ == '__main__':    
     p = '/units/IT121/people/bovetl/tasks/JIRA-23'
     d = '/units/IT121/people/bovetl/tasks/'    
     print describe(p)

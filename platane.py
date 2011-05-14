@@ -25,37 +25,37 @@ task_template = Template.compile(file=file('task.html', "r"))
 
 restlite._debug = True
 
-@restlite.resource
-def root():
-    def GET(request):
-        try:
-            return str(model.load(get_path(request)))
-        except model.NotFoundException as e:
-            raise restlite.Status, '404 '+str(e)
-    def PUT(request, entity):
-        print "PUT "+entity
-        return "hello"
-    def POST(request, entity):
-        print "POST "+entity
-        return "hello"
-    def DELETE(request):
-        print "GET"
-        return "hello"        
-    return locals()
-
-
-def get_it(env, start_response):
+def do_get(env, start_response):
     try:
-        return str(model.load(get_path(request)))
+        path = get_path(env)
+        d = model.describe(path)
+        m = model.load(path)
         start_response('200 OK', [('Content-Type', 'text/html')])        
+        if d['type'] == 'leaf':
+            print m
+            return str(task_template(searchList=[ { 'attributes': m } ]))
+        else:
+            return str(list_template(searchList=[ { 'list' : m } ]))
     except model.NotFoundException as e:
         raise restlite.Status, '404 '+str(e)
 
-def get_path(request):    
-    return request['wsgiorg.routing_args']['path']
+def do_put(env, start_response):
+    pass
+    
+def do_post(env, start_response):
+    pass
+
+def do_delete(env, start_response):
+    pass
+    
+def get_path(env):    
+    return env['wsgiorg.routing_args']['path']
 
 routes = [
-    (r'GET,PUT,POST,DELETE /(?P<path>.*)', get_it),    
+    (r'GET /(?P<path>.*)', do_get),    
+    (r'PUT /(?P<path>.*)', do_put),   
+    (r'POST /(?P<path>.*)', do_post),   
+    (r'DELETE /(?P<path>.*)', do_delete),   
 ]        
     
 if __name__ == '__main__':

@@ -1,0 +1,25 @@
+<html>
+    <body>
+        <form action="POST">
+            <table>
+                <tr>
+                    <td>Name</td><td>$attributes.name</td>
+                </tr>
+                <tr>
+                    <td>Effort</td><td><input type="text" name="effort" value="$attributes.effort"></input></td>
+                </tr>
+                <tr>
+                    <td>Load</td><td><input type="text" name="load" value="$attributes.load"></input></td>
+                </tr>                
+                <tr>
+                    <td>Start Date</td><td><input type="text" name="from" value="$attributes.from"></input></td>
+                </tr>
+                <tr>
+                    <td>Due Date</td><td><input type="text" name="to" value="$attributes.to"></input></td>
+                </tr>
+            </table>
+            <input type="submit" value="Save"/>
+        </form>
+    </body>
+</html>
+                
