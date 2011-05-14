@@ -1,21 +1,21 @@
 root:
-    children:
+    dict:
         units:
-            search: true
-            children: 
-                people:
-                    search: true
-                    children:
-                        tasks:
-                            search: true
-                            attributes:
-                                name: str
-                                description: str
-                                priority: int
-                                from: date
-                                to: date
-                                effort: float
-                                load: float                            
+            list:
+                dict:
+                    people:
+                        list:
+                            dict:
+                                tasks:
+                                    list:
+                                        attributes:
+                                            name: str
+                                            description: str
+                                            priority: int
+                                            from: date
+                                            to: date
+                                            effort: float
+                                            load: float                            
         
                     
                         
