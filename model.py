@@ -80,7 +80,7 @@ def create(path):
     path = normalize(path)
     d = describe(path)
     if d:
-        fs_create(path, d)
+        create_internal(path, d)
     else:
         raise NotFoundException('Invalid path '+path)
         
@@ -95,7 +95,7 @@ def load(path):
         if d['type'] == 'dict':
             return d['children']
         else:
-            result = fs_load(path, d)        
+            result = load_internal(path, d)        
         if d['type'] == 'leaf':
             result = check_attributes(result, d['attributes'])
         return result
@@ -110,7 +110,7 @@ def save(path, attributes):
     d = describe(path)
     if d and d['type'] == 'leaf':
         attributes = check_attributes(attributes, d['attributes'])
-        fs_save(path, attributes, d)
+        save_internal(path, attributes, d)
     else:
         raise NotFoundException('Invalid path or non-leaf path: '+path)
 
@@ -121,7 +121,7 @@ def delete(path):
     path = normalize(path)
     d = describe(path)
     if d and describe('/'.join(path.split('/')[:-1]))['type'] == 'list':
-        fs_delete(path, d)      
+        delete_internal(path, d)      
     else:
         raise NotFoundException('Invalid path or not deletable: '+path)
 
@@ -166,7 +166,7 @@ schema = yaml.load( file(root+'/schema', 'r'))
 
 import os, os.path
 
-def fs_create(path, d):
+def create_internal(path, d):
     if not os.path.exists(root+path):
         if d['type'] == 'leaf':
             if not os.path.exists(root+'/'.join(path.split('/')[:-1])):
@@ -179,7 +179,7 @@ def fs_create(path, d):
                 if not os.path.exists(root+path+'/'+c):
                     os.mkdir(root+path+'/'+c)
     
-def fs_load(path, d):    
+def load_internal(path, d):    
     if os.path.exists(root+path):
         if d['type'] == 'list':
             return os.listdir(root+path)
@@ -188,13 +188,13 @@ def fs_load(path, d):
     else:
         raise NotFoundException('Path not found: '+path)
 
-def fs_save(path, attributes, d):
+def save_internal(path, attributes, d):
     if os.path.exists(root+path):
         yaml.dump(attributes, file(root+path, "w"));
     else:
         raise NotFoundException('Path not found: '+path)    
 
-def fs_delete(path):
+def delete_internal(path):
     pass
 
 # test

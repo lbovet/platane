@@ -16,8 +16,12 @@
 ##  License along with Platane. 
 ##  If not, see <http://www.gnu.org/licenses/>.
 
-import restlite                  
+import restlite
 import model
+from Cheetah.Template import Template
+
+list_template = Template.compile(file=file('list.html', "r"))
+task_template = Template.compile(file=file('task.html', "r"))
 
 restlite._debug = True
 
@@ -28,7 +32,6 @@ def root():
             return str(model.load(get_path(request)))
         except model.NotFoundException as e:
             raise restlite.Status, '404 '+str(e)
-        
     def PUT(request, entity):
         print "PUT "+entity
         return "hello"
@@ -40,11 +43,19 @@ def root():
         return "hello"        
     return locals()
 
+
+def get_it(env, start_response):
+    try:
+        return str(model.load(get_path(request)))
+        start_response('200 OK', [('Content-Type', 'text/html')])        
+    except model.NotFoundException as e:
+        raise restlite.Status, '404 '+str(e)
+
 def get_path(request):    
     return request['wsgiorg.routing_args']['path']
 
 routes = [
-    (r'GET,PUT,POST,DELETE /(?P<path>.*)', root),    
+    (r'GET,PUT,POST,DELETE /(?P<path>.*)', get_it),    
 ]        
     
 if __name__ == '__main__':
