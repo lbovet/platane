@@ -1,9 +1,10 @@
 <html>
     <body>
-        <form action="POST">
+        <form method="POST">
             <table>
                 <tr>
                     <td>Name</td><td>$attributes.name</td>
+                    <input type="hidden" name="name" value="$attributes.name"></input>
                 </tr>
                 <tr>
                     <td>Effort</td><td><input type="text" name="effort" value="$attributes.effort"></input></td>

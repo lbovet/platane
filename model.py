@@ -17,6 +17,7 @@
 ##  If not, see <http://www.gnu.org/licenses/>.
 
 import yaml
+import datetime
 
 # interface 
 
@@ -144,15 +145,34 @@ def normalize(path):
         path = '/' + path        
     return path
 
-defaults = { 'int': 0,
-             'date': None,
-             'str': "",
-             'float': 0.0 }
+def parse_date(date_string):
+    if type(date_string) == str:
+        return datetime.datetime(date_string)
+
+types = { 'int': [0, int],
+             'date': [ None, parse_date],
+             'str': [ "", str ],
+             'float': [ 0.0, float ] }
+
+class ParseException(Exception):
+    def __init__(self, errors):
+        self.errors = errors
+    def __str__(self):
+        return str(self.errors)
 
 def check_attributes(attr_dict, attr_schema):
+    errors = []
     for attr in attr_schema.keys():
-        if not attr in attr_dict.keys():
-            attr_dict[attr] = defaults[attr_schema[attr]]    
+        try:
+            if not attr in attr_dict.keys():
+                attr_dict[attr] = types[attr_schema[attr]][0]    
+            if type(attr_dict[attr]) == list: 
+                attr_dict[attr] = attr_dict[attr][0] # unpack urlencoded form
+            attr_dict[attr] = types[attr_schema[attr]][1](attr_dict[attr]) # cast to appropriate type
+        except:
+            errors.append(attr)
+    if len(errors)>0:
+        raise ParseException(errors)
 
 def as_dict(element):
     if element.has_key('dict'):

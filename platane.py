@@ -18,6 +18,7 @@
 
 import restlite
 import model
+import urlparse
 from Cheetah.Template import Template
 
 list_template = Template.compile(file=file('list.html', "r"))
@@ -26,27 +27,44 @@ task_template = Template.compile(file=file('task.html', "r"))
 restlite._debug = True
 
 def do_get(env, start_response):
-    try:
-        path = get_path(env)
-        d = model.describe(path)
-        m = model.load(path)
-        start_response('200 OK', [('Content-Type', 'text/html')])        
-        if d['type'] == 'leaf':
-            print m
-            return str(task_template(searchList=[ { 'attributes': m } ]))
-        else:
-            return str(list_template(searchList=[ { 'list' : m } ]))
-    except model.NotFoundException as e:
-        raise restlite.Status, '404 Not Found'
+   return handle(env, start_response, get_body)
+   
+def get_body(path, d, m):
+    if d['type'] == 'leaf':
+        print m
+        return str(task_template(searchList=[ { 'attributes': m } ]))
+    else:
+        return str(list_template(searchList=[ { 'list' : m } ]))
 
 def do_put(env, start_response):
-    pass
+    return handle(env, start_response, save_body, m=urlparse.parse_qs(env['wsgi.input'].read(int(env['CONTENT_LENGTH']))))
     
 def do_post(env, start_response):
-    pass
+    return handle(env, start_response, save_body, m=urlparse.parse_qs(env['wsgi.input'].read(int(env['CONTENT_LENGTH']))))
+
+def save_body(path, d, m):
+    print path, m
+    model.create(path)
+    model.save(path, m)
+    return "\n"
 
 def do_delete(env, start_response):
     pass
+
+def handle(env, start_response, handler, m=None):
+    try:
+        path = get_path(env)
+        d = model.describe(path)
+        if not m:
+            m = model.load(path)
+            start_response('200 OK', [('Content-Type', 'text/html')])
+        else:
+            start_response('302 Redirect', [('Location', env['SCRIPT_NAME'])])
+        return handler(path, d, m)
+    except model.NotFoundException as e:
+        raise restlite.Status, '404 Not Found'    
+    except model.ParseException as e:
+        raise restlite.Status, '400 Bad Field', str(e.errors)
     
 def get_path(env):    
     return env['wsgiorg.routing_args']['path']
