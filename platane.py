@@ -1,3 +1,4 @@
+#!/usr/bin/python
 ##  Copyright 2011 Laurent Bovet <laurent.bovet@windmaster.ch>
 ##
 ##  This file is part of Platane.
@@ -19,6 +20,9 @@
 import restlite
 import model
 import urlparse
+import urllib
+import datetime
+import scheduler
 from Cheetah.Template import Template
 
 list_template = Template.compile(file=file('list.html', "r"))
@@ -27,47 +31,120 @@ task_template = Template.compile(file=file('task.html', "r"))
 restlite._debug = True
 
 def do_get(env, start_response):
-   return handle(env, start_response, get_body)
+    return handle(env, start_response, get_body)
    
-def get_body(path, d, m):
+def get_body(path, d, m, env):
+    parent_type = None
+    parent = model.parent(path)
+    qs = urlparse.parse_qs(env['QUERY_STRING'])
+
+    if parent:
+        parent_type = model.describe(parent)['type']
     if d['type'] == 'leaf':
-        print m
-        return str(task_template(searchList=[ { 'attributes': m } ]))
+        for k,v in m.iteritems():
+            if v and type(v) == datetime.date:
+                m[k]=v.strftime('%d.%m.%Y')
+            if type(v) == float and v == int(v):
+                m[k] = int(v)            
+            if v == 0 or v == 0.0:
+                m[k] = ''    
+        errors = ()        
+        if 'e' in qs:
+            errors = qs['e']
+            for k in m.keys():
+                if k in qs:
+                    m[k] = qs[k][0]
+        return str(task_template(searchList=[ { 'context': '/', 'path':path, 'parent_type': parent_type, 'attributes': m, 'errors': errors, 'qs': qs } ])), None
     else:
-        return str(list_template(searchList=[ { 'list' : m } ]))
+        return str(list_template(searchList=[ { 'context': '/', 'path':path, 'parent_type': parent_type, 'list' : m, 'type':  d['type'], 'qs':qs } ])), None
 
 def do_put(env, start_response):
-    return handle(env, start_response, save_body, m=urlparse.parse_qs(env['wsgi.input'].read(int(env['CONTENT_LENGTH']))))
+    return handle(env, start_response, save_body, m=get_post(env))
     
 def do_post(env, start_response):
-    return handle(env, start_response, save_body, m=urlparse.parse_qs(env['wsgi.input'].read(int(env['CONTENT_LENGTH']))))
+    m = get_data(env)
+    if 'method' in m.keys():            
+        if m['method'] == 'DELETE':
+            return handle(env, start_response, delete_body, m)
+    return handle(env, start_response, save_body, m)
 
-def save_body(path, d, m):
-    print path, m
-    model.create(path)
-    model.save(path, m)
-    return "\n"
+def get_data(env):
+    p = urlparse.parse_qs(env['wsgi.input'].read(int(env['CONTENT_LENGTH'])))
+    for k,v in p.iteritems():
+        p[k] = v[0]
+    return p
+
+def save_body(path, d, m, env):
+    if d['type'] == 'leaf':
+        model.create(path)
+        model.save(path, m)
+        return "\n", model.parent(path)
+    if d['type'] == 'list' and 'name' in m:
+        new_path = path+"/"+m['name']
+        if path.strip() == '':
+            return "\n", path
+        model.create(new_path)    
+        if model.describe(new_path)['type'] == 'leaf':
+            model.save(new_path, { 'name': m['name'] })
+        return "\n", new_path
+    return None, path
 
 def do_delete(env, start_response):
-    pass
+    return handle(env, start_response, delete_body, m=get_post(env))
 
+def delete_body(path, d, m, env):
+    parent = model.parent(path)
+    if parent and model.describe(parent)['type'] == 'list':
+        model.delete(path)
+        return "\n", parent
+    else:
+        raise restlite.Status, '403 Forbidden' 
+    
 def handle(env, start_response, handler, m=None):
+    path = get_path(env)
+    if len(path) > 0 and not path[-1] == '/':
+        start_response('302 Redirect', [('Location', model.normalize(path)+"/")])            
+        return
+    path = model.normalize(path)
     try:
-        path = get_path(env)
         d = model.describe(path)
+        if d['type'] == 'render':
+            content, mime = eval(d['function']+'(path, env)')
+            start_response('200 OK', [('Content-Type', mime)])        
+            return content
         if not m:
             m = model.load(path)
-            start_response('200 OK', [('Content-Type', 'text/html')])
+        content, redirect = handler(path, d, m, env)
+        if redirect:
+            redirect = model.normalize(redirect)
+            close=''
+            qs = urlparse.parse_qs(env['QUERY_STRING'])
+            print qs
+            if 'c' in qs and qs['c'][0]=='1':
+                close='?c=2'
+            start_response('302 Redirect', [('Location', redirect+"/"+close)])            
+            return
         else:
-            start_response('302 Redirect', [('Location', env['SCRIPT_NAME'])])
-        return handler(path, d, m)
-    except model.NotFoundException as e:
+            start_response('200 OK', [('Content-Type', 'text/html')])        
+            return content 
+    except model.NotFoundException as e:   
+        import traceback
+        traceback.print_exc()
         raise restlite.Status, '404 Not Found'    
     except model.ParseException as e:
-        raise restlite.Status, '400 Bad Field', str(e.errors)
+        d = {}
+        d.update( { 'e': e.errors } )
+        d.update(e.attributes)
+        start_response('302 Redirect', [('Location', model.normalize(path)+"/?"+urllib.urlencode(d, True))])
+        return
     
 def get_path(env):    
-    return env['wsgiorg.routing_args']['path']
+    return env['wsgiorg.routing_args']['path'].split('?')[0]
+
+def show_tasks(path, env):
+    tasks = []
+    model.traverse( model.parent(path), lambda p : tasks.append(p[1]) )
+    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/' } ), 'text/html'
 
 routes = [
     (r'GET /(?P<path>.*)', do_get),    

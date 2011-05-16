@@ -1,10 +1,23 @@
 <html>
-    <body>
-        <ul>
-            #for $i in $list
-            <li><a href="$i/">$i</a></li>
-            #end for
-        </ul>
+    #include "header.html"
+        #if $type=='list'
+        <form method="POST" name="new">
+            <input type="text" name="name"></input>
+            <input type="submit" value="New"></input>
+        </form>
+        <script type="text/javascript">
+            document.new.name.focus();
+        </script>
+        #end if
+        #if $parent_type=='list'
+        <form method="POST" onsubmit="return confirm('Really want to delete $name ?')">
+            <input type="hidden" name="method" value="DELETE"></input>
+            <input type="submit" value="Delete"></input>
+        </form>
+        #end if        
+        #for $i in $list
+        <a href="$i/">$i<br>
+        #end for
     </body>
 </html>
                 

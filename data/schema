@@ -16,10 +16,9 @@ root:
                                             to: date
                                             effort: float
                                             load: float                            
-        
-                    
-                        
-                        
-                    
-                    
-    
+                                planning:
+                                    render:
+                                        function: show_tasks                                                                                    
+                    planning:
+                        render:
+                            function: show_tasks  

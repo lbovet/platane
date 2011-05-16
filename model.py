@@ -18,6 +18,7 @@
 
 import yaml
 import datetime
+import re
 
 # interface 
 
@@ -27,6 +28,7 @@ A dictionary containing:
 - A 'type' being 'dict', 'list', 'leaf'
 - An 'attributes' dictionary (for all types)
 - A 'children' list containing child names (for dict and list types)
+- A 'render' function name for a special rendering
 Returns None if path does not match the schema
 '''
 def describe(path):
@@ -60,6 +62,9 @@ def describe(path):
                 children = None
             element = level
             continue
+        level = as_render(element)
+        if level:
+            return { 'type': 'render', 'function': level['function'] }
         attr = get_attributes(element)
         if attr:
             type='leaf'
@@ -100,6 +105,7 @@ def load(path):
             result = load_internal(path, d)        
         if d['type'] == 'leaf':
             check_attributes(result, d['attributes'])
+            result['url'] = path+"/"
         return result
     else:
         raise NotFoundException('Invalid path: '+path)
@@ -122,7 +128,7 @@ Delete a path.
 def delete(path):
     path = normalize(path)
     d = describe(path)
-    if d and describe('/'.join(path.split('/')[:-1]))['type'] == 'list':
+    if d and describe(parent(path))['type'] == 'list':
         delete_internal(path, d)      
     else:
         raise NotFoundException('Invalid path or not deletable: '+path)
@@ -136,7 +142,7 @@ def normalize(path):
     path = path.strip()
     path = path.replace('..', '')
     while path.find('//') > -1:
-        path.replace('//', '/')
+        path = path.replace('//', '/')
     if len(path) > 0 and path[-1] == '/':
         path = path[:-1]
     if len(path) == 0:
@@ -145,34 +151,59 @@ def normalize(path):
         path = '/' + path        
     return path
 
-def parse_date(date_string):
-    if type(date_string) == str:
-        return datetime.datetime(date_string)
+def parent(path):
+    path = normalize(path)
+    if len(path) > 0:
+        return '/'.join(path.split('/')[:-1])
+
+date_formats = ( (re.compile(r'^([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=int(v[1][0]))),
+                 (re.compile(r'^([0-9]?[0-9])\.([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=int(v[1][0]), month=int(v[1][1]))),
+                 (re.compile(r'^([0-9]?[0-9])\.([0-9]?[0-9])\.(20[0-9][0-9])$'), lambda(v) : v[0].replace(day=int(v[1][0]), month=int(v[1][1]), year=int(v[1][2]))),
+                 (re.compile(r'^(20[0-9][0-9])-([0-9]?[0-9])-([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=int(v[1][2]), month=int(v[1][1]), year=int(v[1][0]))) )
+
+def traverse(path, function):
+    d = describe(path)
+    if d['type'] == 'leaf':
+        function( (path, load(path) ) )
+    if d['type'] == 'dict' or d['type'] == 'list':
+        for child in load(path):
+            traverse(path+"/"+child, function)
+
+def check_date(d):
+    if type(d) == str:
+        if d.strip() == '':
+            return None
+        r = datetime.date.today()
+        for f in date_formats:
+            m = f[0].match(d)
+            if m:
+                return f[1]( (r, m.groups()) )
+        raise Exception()
+    return d
 
 types = { 'int': [0, int],
-             'date': [ None, parse_date],
+             'date': [ None, check_date],
              'str': [ "", str ],
              'float': [ 0.0, float ] }
 
 class ParseException(Exception):
-    def __init__(self, errors):
+    def __init__(self, attributes, errors):
+        self.attributes = attributes
         self.errors = errors
-    def __str__(self):
-        return str(self.errors)
 
 def check_attributes(attr_dict, attr_schema):
     errors = []
+    original_attributes = {}
+    original_attributes.update(attr_dict)
     for attr in attr_schema.keys():
         try:
             if not attr in attr_dict.keys():
                 attr_dict[attr] = types[attr_schema[attr]][0]    
-            if type(attr_dict[attr]) == list: 
-                attr_dict[attr] = attr_dict[attr][0] # unpack urlencoded form
             attr_dict[attr] = types[attr_schema[attr]][1](attr_dict[attr]) # cast to appropriate type
         except:
             errors.append(attr)
     if len(errors)>0:
-        raise ParseException(errors)
+        raise ParseException(original_attributes, errors)
 
 def as_dict(element):
     if element.has_key('dict'):
@@ -181,6 +212,10 @@ def as_dict(element):
 def as_list(element):
     if element.has_key('list'):
         return element['list']
+
+def as_render(element):
+    if element.has_key('render'):
+        return element['render']
     
 def get_attributes(element):
     if element.has_key('attributes'):
@@ -191,12 +226,12 @@ def get_attributes(element):
 root = 'data'
 schema = yaml.load( file(root+'/schema', 'r'))
 
-import os, os.path
+import os, os.path, shutil
 
 def create_internal(path, d):
     if not os.path.exists(root+path):
         if d['type'] == 'leaf':
-            if not os.path.exists(root+'/'.join(path.split('/')[:-1])):
+            if not os.path.exists(root+parent(path)):
                 os.makedirs(root+'/'.join(path.split('/')[:-1]))
             yaml.dump({}, file(root+path, "w"));
         if d['type'] == 'dict':              
@@ -221,8 +256,12 @@ def save_internal(path, attributes, d):
     else:
         raise NotFoundException('Path not found: '+path)    
 
-def delete_internal(path):
-    pass
+def delete_internal(path, d):
+    if os.path.exists(root+path):
+        if d['type'] == 'leaf':
+            os.remove(root+path)
+        else:
+            shutil.rmtree(root+path)
 
 # test
 
@@ -232,6 +271,10 @@ if __name__ == '__main__':
     print describe(p)
     create(p)
     save(p, { 'name': 'JIRA-23' })
+    save(p, { 'name': 'JIRA-24' })
     print load(p)
     print load('/')
     print load(d)
+    t = []
+    traverse('/units', lambda(x): t.append(x))
+    print t

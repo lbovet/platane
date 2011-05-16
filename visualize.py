@@ -23,18 +23,19 @@ tasks_template = Template.compile(file=file('tasks.html', "r"))
 '''
 Renders a schedule as HTML.
 '''
-def render(dates, slots, tasks):
+def render(dates, slots, tasks, vars):
     slots = round_list(slots)
     ftasks = []
     g, separators = groups(dates, slots)
     for t in tasks:
-        ftasks.append( (t[0], format(round_list(t[1]), separators, t[2]>t[3]), t[2], t[3] ) )
-    vars = { 'dates' : merge(dates, separators_colors(separators)),
+        ftasks.append( (t[0], format(round_list(t[1]), separators, t[2]>t[3]), t[2], t[3], t[4] ) )
+    all_vars = { 'dates' : merge(dates, separators_colors(separators)),
          'groups' : g,
          'slots' : format(slots, separators),
          'tasks' : ftasks
         }
-    return str(tasks_template(searchList=[vars]))
+    all_vars.update(vars)
+    return str(tasks_template(searchList=[all_vars]))
 
 '''
 Model for year, month, week headers and week separator.
