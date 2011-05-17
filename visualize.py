@@ -28,12 +28,12 @@ def render(dates, slots, tasks, vars):
     ftasks = []
     g, separators = groups(dates, slots)
     for t in tasks:
-        ftasks.append( (t[0], format(round_list(t[1]), separators, (round(t[2],3)>round(t[3],3)), t[2], t[3], t[4] ) )
-    all_vars = { 'dates' : merge(dates, separators_colors(separators)),
-         'groups' : g,
-         'slots' : format(slots, separators),
-         'tasks' : ftasks
-        }
+        ftasks.append( (t[0], format(round_list(t[1]), separators, round(t[2],3)>round(t[3],3)), t[2], t[3], t[4] ) ) 
+        all_vars = { 'dates' : merge(dates, separators_colors(separators)),
+             'groups' : g,
+             'slots' : format(slots, separators),
+             'tasks' : ftasks
+            }
     all_vars.update(vars)
     return str(tasks_template(searchList=[all_vars]))
 
