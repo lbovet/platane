@@ -1,4 +1,3 @@
-<html>
     #include "header.html"
         #if $type=='list'
         <form method="POST" name="new">
@@ -14,9 +13,10 @@
             <input type="hidden" name="method" value="DELETE"></input>
             <input type="submit" value="Delete"></input>
         </form>
-        #end if        
+        #end if
+        <br/>        
         #for $i in $list
-        <a href="$i/">$i<br>
+        <a href="$i/">$i<br/>
         #end for
     </body>
 </html>

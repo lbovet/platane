@@ -7,7 +7,7 @@ root:
                         list:
                             dict:
                                 tasks:
-                                    list:
+                                    list: &task
                                         attributes:
                                             name: str
                                             description: str
@@ -21,4 +21,8 @@ root:
                                         function: show_tasks                                                                                    
                     planning:
                         render:
-                            function: show_tasks  
+                            function: show_unit_tasks
+                    holidays: 
+                        list: *task                            
+        holidays: 
+            list: *task                      

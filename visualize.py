@@ -82,7 +82,9 @@ def color(value, overflow=False):
         return '#aaaaaa' if not overflow else '#dd8888'
     if value < 0.8:
         return '#888888' if not overflow else '#cc6666' 
-    return '#444444' if not overflow else '#bb2222'
+    if value < 1.0:
+        return '#666666' if not overflow else '#bb4444'
+    return '#444444' if not overflow else '#aa2222'
 
 '''
 Merges two lists in one list of 2-tuples.

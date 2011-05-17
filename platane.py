@@ -23,6 +23,7 @@ import urlparse
 import urllib
 import datetime
 import scheduler
+import visualize
 from Cheetah.Template import Template
 
 list_template = Template.compile(file=file('list.html', "r"))
@@ -145,6 +146,16 @@ def show_tasks(path, env):
     tasks = []
     model.traverse( model.parent(path), lambda p : tasks.append(p[1]) )
     return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/' } ), 'text/html'
+    
+def show_unit_tasks(path, env):
+    schedules = {}
+    preople = path+'/people'
+    
+    for person in model.load(people):
+        tasks = []
+        model.traverse( model.parent(people+'/'+person), lambda p : tasks.append(p[1]) )
+        dates, slots, sched = scheduler.prepare_schedule(tasks)
+        schedules[person] = ( dates, slots, sched )
 
 routes = [
     (r'GET /(?P<path>.*)', do_get),    
