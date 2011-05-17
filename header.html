@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+
+<html xmlns="http://www.w3.org/1999/xhtml" 
+  xml:lang="en" lang="en">
+
+<head>
+#if 'c' in $qs and $qs['c'][0]=='2':
+<script type="text/javascript">
+    window.close()
+    window.opener.location.reload() 
+</script>    
+#end if
+#if $path.strip() == '/' 
+    #set global $name = 'home'
+    #set $window_name = 'home'
+    #set $title_name = 'home'    
+#else
+    #set global $name = $path.split('/')[-1]
+    #set $window_name = $name
+    #set $title_name = $name
+    #if len($path.split('/')) > 2:
+        #set $title_name = '<span class="light">' +$path.split('/')[-2] + '</span> ' + $name
+        #set $window_name = $name + ' - ' + $path.split('/')[-2]
+    #end if
+#end if
+    <title>$window_name - platane 0.1</title>
+    <style>
+    body { background-color: white; font-family: helvetica; }
+    body,td { font-size: 10pt; font-family: helvetica; }
+    table { text-align: center; border-collapse: collapse; border-right: 1px solid lightgrey;}
+    .legend {
+            border: 1px solid lightgrey;
+            color: gray;
+    }
+    small {
+        font-size: 8pt;
+    }
+    .light { color: gray; }
+    .slot { font-size: 10pt; font-family: courier;
+        border-top: 1px solid white;
+         border-left: 1px solid white;
+         border-bottom: 1px solid white}
+    .week { border-left: 1px solid lightgrey;
+            border-top: 1px solid lightgrey; }
+    .total { border-bottom: 2px solid white; }
+    .title { text-align: right; vertical-align: middle; padding: 3px;
+        border-top: 0px solid;
+        border-left: 0px solid;
+        border-bottom: 0px solid;
+    }
+    .overflow {
+        color: #bb2222;
+    }
+    .hasTooltip {
+        text-decoration: none;
+        color: gray;
+    }
+
+    .hasTooltip:hover {
+        text-decoration: none;
+    }
+
+    .hasTooltip span {
+        display: none;
+        color: #000033;
+        text-decoration: none;
+        padding: 3px;
+    }
+    
+    .moving {
+        position: absolute;
+    }
+    
+    .hasTooltip:hover span {
+        text-decoration: none;
+        font-family: helvetica;
+        font-size: 10pt;
+        display: block;
+        position: absolute;
+        background-color: #FFF;
+        border: 1px solid #CCC;
+        margin: -2em 1em;
+    }
+    
+    a { color: black; text-decoration: none; }
+    a:hover { color:black; text-decoration: underline; }
+    a:visited { color: black; }
+    
+    </style>
+</head>
+<body>
+#if $name == 'home' 
+    <small>[ <a href="http://github.com/lbovet/platane">platane</a> ]</small>
+#else
+    <small>
+    <a href="$context">home</a> 
+    #set $a = $context
+    #for $p in $path.split('/')[1:-1]
+        #set $a = $a + $p + '/'
+        > <a href="$a">$p</a>
+    #end for
+    </small>
+#end if
+<h2>$title_name</h2>
