@@ -109,7 +109,7 @@ def handle(env, start_response, handler, m=None):
     path = model.normalize(path)
     try:
         d = model.describe(path)
-        if d['type'] == 'render':
+        if d and d['type'] == 'render':
             content, mime = eval(d['function']+'(path, env)')
             start_response('200 OK', [('Content-Type', mime)])        
             return content
