@@ -23,7 +23,7 @@
             <td class="legend" style="border-left-color: $i[1];">$i[0].day</td>
         #end for
     </tr>
-    <tr><td class="title moving">Total</td><td class="title light">$len($slots)</td>
+    <tr><td class="title">Total</td><td class="title light">$len($slots)</td>
         #for $i in $slots
             <td class="slot total" style="border-left-color: $i[1];" bgcolor="$i[0][1]"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i[0][0]*100))%</span></a></td>
         #end for
