@@ -148,14 +148,41 @@ def show_tasks(path, env):
     return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/' } ), 'text/html'
     
 def show_unit_tasks(path, env):
-    schedules = {}
+    schedules_by_date = {}
     preople = path+'/people'
-    
+    min_date = datetime.datetime.now() + datetime.timedelta(90)
+    max_date = datetime.datetime.now()
     for person in model.load(people):
         tasks = []
         model.traverse( model.parent(people+'/'+person), lambda p : tasks.append(p[1]) )
         dates, slots, sched = scheduler.prepare_schedule(tasks)
-        schedules[person] = ( dates, slots, sched )
+        if dates[0] < min_date:
+            min_date = dates[0]
+        if dates[-1] > max_date:
+            max_date =  dates[0]        
+        if dates[0] in schedules_by_date:
+            l = schedules_by_date[dates[0]]
+        else:
+            l = []
+            schedules_by_date[dates[0]] = l
+        l.append([ person, slots])
+    
+    dates = scheduler.calendar(from_date=min_date, to_date=max_date)
+    slots = [0]*len(dates)
+    
+    #Align and add missing slots
+    i=0
+    for d in dates:
+        if d in schedules_by_date:
+            for s in schedules_by_date:
+                # fill before and after existing slots
+                s[1] = ([0]*i) + s[1]
+                if len(s[1]) < len(slots):
+                    s[1] = s[1] + ([0]*(len(slots)-len(s[1])))
+                    
+        
+    #visualize.render(dates, slots, sched, vars)    
+    #(name, s[name], all_items[name]['effort'], sum(s[name]), task_dict[name] )
 
 routes = [
     (r'GET /(?P<path>.*)', do_get),    
