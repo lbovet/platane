@@ -29,7 +29,7 @@ from Cheetah.Template import Template
 list_template = Template.compile(file=file('list.html', "r"))
 task_template = Template.compile(file=file('task.html', "r"))
 
-restlite._debug = True
+#restlite._debug = True
 
 def do_get(env, start_response):
     return handle(env, start_response, get_body)
@@ -111,7 +111,7 @@ def handle(env, start_response, handler, m=None):
         d = model.describe(path)
         if d and d['type'] == 'render':
             content, mime = eval(d['function']+'(path, env)')
-            start_response('200 OK', [('Content-Type', mime)])        
+            start_response('200 OK', [('Content-Type', mime), ('Content-Length', str(len(content)))])        
             return content
         if not m:
             m = model.load(path)
@@ -121,12 +121,15 @@ def handle(env, start_response, handler, m=None):
             close=''
             qs = urlparse.parse_qs(env['QUERY_STRING'])
             print qs
-            if 'c' in qs and qs['c'][0]=='1':
-                close='?c=2'
+            if 'c' in qs:
+                if qs['c'][0]=='0':
+                    close='?c=1'
+                if qs['c'][0]=='1':
+                    close='?c=2'
             start_response('302 Redirect', [('Location', redirect+"/"+close)])            
             return
         else:
-            start_response('200 OK', [('Content-Type', 'text/html')])        
+            start_response('200 OK', [('Content-Type', 'text/html'), ('Content-Length', str(len(content)))])        
             return content 
     except model.NotFoundException as e:   
         import traceback
@@ -145,7 +148,7 @@ def get_path(env):
 def show_tasks(path, env):
     tasks = []
     model.traverse( model.parent(path), lambda p : tasks.append(p[1]) )
-    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/' } ), 'text/html'
+    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks' } ), 'text/html'
     
 def show_unit_tasks(path, env):
     schedules_by_date = {}
@@ -184,7 +187,7 @@ def show_unit_tasks(path, env):
     for i in schedules_by_date.values():
         s.extend(i)
     
-    return visualize.render(dates, slots, sorted(s), vars={'qs':{}, 'context':'/', 'path':path}), "text/html"
+    return visualize.render(dates, slots, sorted(s), vars={'qs':{}, 'context':'/', 'path':path, 'sum':True }), "text/html"
 
 routes = [
     (r'GET /(?P<path>.*)', do_get),    
@@ -193,11 +196,13 @@ routes = [
     (r'DELETE /(?P<path>.*)', do_delete),   
 ]        
     
+application = restlite.router(routes)
+    
 if __name__ == '__main__':
     import sys
     from wsgiref.simple_server import make_server
     
-    httpd = make_server('', 8080, restlite.router(routes))
+    httpd = make_server('', 8080, application)
     
     try: httpd.serve_forever()
     except KeyboardInterrupt: pass

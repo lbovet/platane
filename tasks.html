@@ -1,10 +1,15 @@
 #include "header.html"
 <table>
+#if $sum
+    #set $factor=len($tasks)
+#else
+    #set $factor=1
+#end if
 <tr><td class="title"></td><td class="title"></td>
     #for $i in $groups.year
         <td class="legend" colspan="$i[1]"><span><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
         #if i[1] != i[2]
-            <small>$int(round(i[1]-i[2])) days free</small>
+            <small>$int(round($factor*(i[1]-i[2]))) days free</small>
         #end if
         </span></a></span></td>
     #end for
@@ -13,7 +18,7 @@
     #for $i in $groups.month
         <td class="legend" colspan="$i[1]"><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
         #if i[1] != i[2]
-            <small>$round(i[1]-i[2], 1) days free</small>
+            <small>$round($factor*(i[1]-i[2]), 1) days free</small>
         #end if
         </span></a></td>
     #end for
@@ -23,7 +28,7 @@
         <td class="legend" style="border-left-color: $i[1];">$i[0].day</td>
     #end for
 </tr>
-<tr><td class="title">Total</td><td class="title light">$len($slots)</td>
+<tr><td class="title light">total</td><td class="title light">$len($slots)</td>
     #for $i in $slots
         <td class="slot total" style="border-left-color: $i[1];" bgcolor="$i[0][1]"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i[0][0]*100))%</span></a></td>
     #end for
@@ -53,11 +58,19 @@
     #end for
 </tr>
 #end for
-<tr><td class="title"></td><td class="title"></td>
+<tr><td class="title">
+#if not $sum
+    <form action="$add/?c=0" target="_new" method="POST" name="new">
+        <input size="6" type="text" name="name" value=""></input>
+        <input type="submit" value="+"></input>
+    </form>
+    <script>document.new.name=""</script>
+#end if
+</td><td class="title"></td>
     #for $i in $groups.week
         <td class="legend week" colspan="$i[1]"><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
         #if i[1] != i[2]
-            <small>$round(i[1]-i[2], 1) days free</small>
+            <small>$round($factor*(i[1]-i[2]), 1) days free</small>
         #end if
         </span></a></td>
     #end for

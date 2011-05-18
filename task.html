@@ -10,7 +10,7 @@
         #if 'c' in $qs and $qs['c'][0]=='1':
             #set close = '1'
         #end if
-        <input type="hidden" name="close" value="$close"/>
+        <input type="hidden" name="c" value="$close"/>
         <input type="hidden" name="name" value="$attributes.name"></input>
         <tr>
             #set $cl = 'error' if 'effort' in $errors else 'normal'
