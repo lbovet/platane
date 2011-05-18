@@ -1,67 +1,66 @@
-  #include "header.html"
-    <table>
-    <tr><td class="title"></td><td class="title"></td>
-        #for $i in $groups.year
-            <td class="legend" colspan="$i[1]"><span><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
-            #if i[1] != i[2]
-                <small>$int(round(i[1]-i[2])) days free</small>
-            #end if
-            </span></a></span></td>
-        #end for
-    </tr>
-    <tr><td class="title"></td><td class="title"></td>
-        #for $i in $groups.month
-            <td class="legend" colspan="$i[1]"><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
-            #if i[1] != i[2]
-                <small>$round(i[1]-i[2], 1) days free</small>
-            #end if
-            </span></a></td>
-        #end for
-    </tr>
-    <tr><td class="title"></td><td class="title"></td>
-        #for $i in $dates
-            <td class="legend" style="border-left-color: $i[1];">$i[0].day</td>
-        #end for
-    </tr>
-    <tr><td class="title">Total</td><td class="title light">$len($slots)</td>
-        #for $i in $slots
-            <td class="slot total" style="border-left-color: $i[1];" bgcolor="$i[0][1]"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i[0][0]*100))%</span></a></td>
-        #end for
-    </tr>
-    #for $t in $tasks
-    <tr>
-        #if (round($t[3],3) != round($t[2],3))
-            #set $highlight = 'overflow'
-        #else
-            #set $highlight = ''
+#include "header.html"
+<table>
+<tr><td class="title"></td><td class="title"></td>
+    #for $i in $groups.year
+        <td class="legend" colspan="$i[1]"><span><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
+        #if i[1] != i[2]
+            <small>$int(round(i[1]-i[2])) days free</small>
         #end if
-        <td class="title $highlight">
-        #if 'url' in $t[4]
-            <a target="_new" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>
-        #else
-            $t[0]
-        #end if
-        </td><td class="title light">$t[2]</td>
-        #for $i in $t[1]
-            <td class="slot" style="border-left-color: $i[1];" bgcolor="$i[0][1]">
-                #if ($i[0][0] > 0)
-                    <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i[0][0]*100))% <small>on $t[0]</small>
-                    #if (round($t[3],3) != round($t[2],3))
-                        but lacks $round(t[2]-t[3], 1) days!
-                    #end if </span></a></td>
-                #end if
-        #end for
-    </tr>
+        </span></a></span></td>
     #end for
-    <tr><td class="title"></td><td class="title"></td>
-        #for $i in $groups.week
-            <td class="legend week" colspan="$i[1]"><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
-            #if i[1] != i[2]
-                <small>$round(i[1]-i[2], 1) days free</small>
+</tr>
+<tr><td class="title"></td><td class="title"></td>
+    #for $i in $groups.month
+        <td class="legend" colspan="$i[1]"><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
+        #if i[1] != i[2]
+            <small>$round(i[1]-i[2], 1) days free</small>
+        #end if
+        </span></a></td>
+    #end for
+</tr>
+<tr><td class="title"></td><td class="title"></td>
+    #for $i in $dates
+        <td class="legend" style="border-left-color: $i[1];">$i[0].day</td>
+    #end for
+</tr>
+<tr><td class="title">Total</td><td class="title light">$len($slots)</td>
+    #for $i in $slots
+        <td class="slot total" style="border-left-color: $i[1];" bgcolor="$i[0][1]"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i[0][0]*100))%</span></a></td>
+    #end for
+</tr>
+#for $t in $tasks
+<tr>
+    #if (round($t[3],3) != round($t[2],3))
+        #set $highlight = 'overflow'
+    #else
+        #set $highlight = ''
+    #end if
+    <td class="title $highlight">
+    #if 'url' in $t[4]
+        <a target="_new" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>
+    #else
+        $t[0]
+    #end if
+    </td><td class="title light">$t[2]</td>
+    #for $i in $t[1]
+        <td class="slot" style="border-left-color: $i[1];" bgcolor="$i[0][1]">
+            #if ($i[0][0] > 0)
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i[0][0]*100))% <small>on $t[0]</small>
+                #if (round($t[3],3) != round($t[2],3))
+                    but lacks $round(t[2]-t[3], 1) days!
+                #end if </span></a></td>
             #end if
-            </span></a></td>
-        #end for
-    </tr>
-    </table>
-</body>
-</html>
+    #end for
+</tr>
+#end for
+<tr><td class="title"></td><td class="title"></td>
+    #for $i in $groups.week
+        <td class="legend week" colspan="$i[1]"><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
+        #if i[1] != i[2]
+            <small>$round(i[1]-i[2], 1) days free</small>
+        #end if
+        </span></a></td>
+    #end for
+</tr>
+</table>
+#include "footer.html"

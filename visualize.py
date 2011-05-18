@@ -16,7 +16,7 @@
 ##  License along with Platane. 
 ##  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 from Cheetah.Template import Template
 tasks_template = Template.compile(file=file('tasks.html', "r"))
 
@@ -111,20 +111,4 @@ def separators_colors(separators):
 Round all values of a list to a precision adequate to comparison.
 '''
 def round_list(l):
-    return [ round(r,3) for r in l ]
-        
-    
-if __name__ == '__main__':
-        
-    dates = [ datetime(2011, 05, 24)+timedelta(d) for d in range(0,20) ]
-    slots = [ d/20.0 for d in range(0,20) ]
-    groups, separators = groups(dates)
-
-    vars = { 'dates' : merge(dates, separators_colors(separators)),
-             'groups' : groups,
-             'slots' : format(slots, separators),
-             'tasks' : [ ('architecture', format([ d/40.0 for d in range(0,20) ], separators)),
-                         ('project1', format([ d/60.0 for d in range(0,20) ], separators)) ]
-            }
-
-    print tasks_template(searchList=[vars])
+    return [ round(r,3) for r in l ]        

@@ -16,7 +16,7 @@
 ##  License along with Platane. 
 ##  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime, date, time, timedelta
+from datetime import date, time, timedelta
 import visualize
 import simplex
 from copy import copy
@@ -30,7 +30,7 @@ month=2
 '''
 Calculate a schedule for the given tasks.
 Returns a result structure: {
-start: <datetime>,
+start: <date>,
 slots: [   ],
 schedule : [
    { task : <taskname>, 
@@ -166,7 +166,7 @@ def calculate(A, b):
 '''
 Transform the task list in schedulable items and compute slots.
 Returns a schedulable structure: {
-    start_date: <datetime>,
+    start_date: <date>,
     slots: [ ],
     slot_size
     items: { <int>, items [ ] }
@@ -251,8 +251,8 @@ def consolidate_related(items, schedule):
 Returns the first from-date and last to-date of all tasks
 '''
 def bounds(tasks, resolution):
-    s = datetime.now()+timedelta(365)
-    e = datetime(2000,01,01)
+    s = date.today()+timedelta(days=365)
+    e = date(2000,01,01)
     for t in tasks:
         if t['from'] < s:
             s = t['from']
@@ -263,7 +263,7 @@ def bounds(tasks, resolution):
 '''
 Generator of a calendar from the given date.
 '''
-def calendar(from_date, to_date=datetime(2100, 01, 01), size=None, resolution=day, work=True):
+def calendar(from_date, to_date=date(2100, 01, 01), size=None, resolution=day, work=True):
     d = from_date
     s = 0
     while True:
@@ -306,15 +306,9 @@ def clean_tasks(tasks):
     good_tasks = []
     for task in tasks:
         if not task.has_key('from') or not task['from']:
-            task['from'] = datetime.now()
-        else:
-            if type(task['from']) == date:
-                task['from'] = datetime.combine(task['from'], time(0))
+            task['from'] = date.today()
         if not task.has_key('to') or not task['to']:
-            task['to'] = datetime.now()+timedelta(90)
-        else:
-            if type(task['to']) == date:
-                task['to'] = datetime.combine(task['to'], time(0))
+            task['to'] = date.today()+timedelta(days=90)
         if ( 'effort' in task and task['effort'] > 0) or ( 'load' in task and task['load'] > 0):
             good_tasks.append(task)
         if 'load' in task:
@@ -327,11 +321,11 @@ def clean_tasks(tasks):
 if __name__ == '__main__':
             
     tasks = [ 
-        { 'name' : 'absence', 'priority':-1, 'effort': 3, 'from':datetime(2011, 05, 24), 'to':datetime(2011, 05, 26) },
-        { 'name' : 'architecture', 'effort': 5, 'from':datetime(2011, 05, 18), 'to':datetime(2011, 06, 8) },        
-        { 'name' : 'management', 'load': 0.1, 'from':datetime(2011, 05, 18), 'to':datetime(2011, 06, 10) },        
-        { 'name' : 'project1',  'effort': 3.5, 'from':datetime(2011, 05, 20), 'to':datetime(2011, 06, 13) },
-        { 'name' : 'project2', 'priority': 1, 'effort': 3.5, 'from':datetime(2011, 05, 23), 'to':datetime(2011, 06, 13) },
-        { 'name' : 'partial time', 'priority': -1, 'load': 0.2, 'from':datetime(2011, 05, 20), 'to':datetime(2011, 06, 2) }]
+        { 'name' : 'absence', 'priority':-1, 'effort': 3, 'from':date(2011, 05, 24), 'to':date(2011, 05, 26) },
+        { 'name' : 'architecture', 'effort': 5, 'from':date(2011, 05, 18), 'to':date(2011, 06, 8) },        
+        { 'name' : 'management', 'load': 0.1, 'from':date(2011, 05, 18), 'to':date(2011, 06, 10) },        
+        { 'name' : 'project1',  'effort': 3.5, 'from':date(2011, 05, 20), 'to':date(2011, 06, 13) },
+        { 'name' : 'project2', 'priority': 1, 'effort': 3.5, 'from':date(2011, 05, 23), 'to':date(2011, 06, 13) },
+        { 'name' : 'partial time', 'priority': -1, 'load': 0.2, 'from':date(2011, 05, 20), 'to':date(2011, 06, 2) }]
         
     print render(tasks)

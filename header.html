@@ -6,6 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" 
   xml:lang="en" lang="en">
 
+#set $version='0.1'
 <head>
 #if 'c' in $qs and $qs['c'][0]=='2':
 <script type="text/javascript">
@@ -26,10 +27,11 @@
         #set $window_name = $name + ' - ' + $path.split('/')[-2]
     #end if
 #end if
-    <title>$window_name - platane 0.1</title>
+    <title>$window_name - platane $version</title>
     <style>
     body { background-color: white; font-family: helvetica; }
     body,td { font-size: 10pt; font-family: helvetica; }
+    .frame { border: 1px solid lightgrey; margin: 80px; padding: 30px; float:left; }
     table { text-align: center; border-collapse: collapse; border-right: 1px solid lightgrey;}
     .legend {
             border: 1px solid lightgrey;
@@ -94,8 +96,10 @@
     </style>
 </head>
 <body>
+<div class="frame">
+<div style="width: 22em"></div>
 #if $name == 'home' 
-    <small>[ <a href="http://github.com/lbovet/platane">platane</a> ]</small>
+    <small>[ <a href="http://github.com/lbovet/platane">platane</a> $version ]</small>
 #else
     <small>
     <a href="$context">home</a> 
