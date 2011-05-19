@@ -244,7 +244,7 @@ def create_internal(path, d):
 def load_internal(path, d):    
     if os.path.exists(root+path):
         if d['type'] == 'list':
-            return os.listdir(root+path)
+            return sorted(os.listdir(root+path))
         if d['type'] == 'leaf':
             return yaml.load(file(root+path))
     else:
