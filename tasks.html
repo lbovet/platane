@@ -25,7 +25,7 @@
 </tr>
 <tr><td class="title"></td><td class="title"></td>
     #for $i in $dates
-        <td class="legend" style="border-left-color: $i[1];">$i[0].day</td>
+        <td class="legend tiny" style="border-left-color: $i[1];">$i[0].day</td>
     #end for
 </tr>
 <tr><td class="title light">total</td><td class="title light">$len($slots)</td>
@@ -50,7 +50,7 @@
     #for $i in $t[1]
         <td class="slot" style="border-left-color: $i[1];" bgcolor="$i[0][1]">
             #if ($i[0][0] > 0)
-                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i[0][0]*100))% <small>on $t[0]</small>
+                <a href="#" class="hasTooltip"><div style="width: 0.8em">&nbsp;</div><span>$int(round(i[0][0]*100))% <small>on $t[0]</small>
                 #if (round($t[3],3) != round($t[2],3))
                     but lacks $round(t[2]-t[3], 1) days!
                 #end if </span></a></td>
