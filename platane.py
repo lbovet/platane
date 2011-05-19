@@ -154,7 +154,8 @@ def show_unit_tasks(path, env):
     schedules_by_date = {}
     people = model.parent(path)+'/people'
     min_date = datetime.date.today() + datetime.timedelta(days=90)
-    max_date = datetime.date.today() 
+    max_date = datetime.date.today()
+    n=0
     for person in model.load(people):
         tasks = []
         model.traverse( people+'/'+person, lambda p : tasks.append(p[1]) )
@@ -162,13 +163,14 @@ def show_unit_tasks(path, env):
         if dates[0] < min_date:
             min_date = dates[0]
         if dates[-1] > max_date:
-            max_date = dates[-1]        
+            max_date = dates[-1]
         if dates[0] in schedules_by_date:
             l = schedules_by_date[dates[0]]
         else:
             l = []
             schedules_by_date[dates[0]] = l
         l.append([ person, slots, sum(slots), sum(slots), {'url': people+'/'+person+'/planning' } ])
+        n+=1.0
     dates = [ d for d in scheduler.calendar(from_date=min_date, to_date=max_date) ]
     slots = [0]*len(dates)
     #Align and add missing slots
@@ -179,15 +181,16 @@ def show_unit_tasks(path, env):
                 # fill before and after existing slots
                 s[1] = ([0]*i) + s[1]
                 if len(s[1]) < len(slots):
-                    s[1] = s[1] + ([0]*(len(slots)-len(s[1])))                    
+                    s[1] = s[1] + ([0]*(len(slots)-len(s[1])))
                 for j in range(len(slots)):
-                    slots[j] = slots[j] + s[1][j] / float(len(schedules_by_date))        
-        i+=1        
+                    slots[j] = slots[j] + s[1][j] / n
+        i+=1
     s = []
     for i in schedules_by_date.values():
         s.extend(i)
-    
+
     return visualize.render(dates, slots, sorted(s), vars={'qs':{}, 'context':'/', 'path':path, 'sum':True }), "text/html"
+
 
 routes = [
     (r'GET /(?P<path>.*)', do_get),    
