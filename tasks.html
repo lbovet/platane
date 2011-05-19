@@ -46,7 +46,7 @@
     #else
         $t[0]
     #end if
-    </td><td class="title light">$t[2]</td>
+    </td><td class="title light">$round($t[2],1)</td>
     #for $i in $t[1]
         <td class="slot" style="border-left-color: $i[1];" bgcolor="$i[0][1]">
             #if ($i[0][0] > 0)
