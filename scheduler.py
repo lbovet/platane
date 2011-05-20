@@ -47,7 +47,7 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
     base_slots = copy(slots) # slots for calculating discrete load
     for priority in sorted(prio_items.keys()):
         items = prio_items[priority]    
-        items = discretize_load(items, base_slots, start_date, period)
+        items = discretize_load(items, base_slots, start_date, period, resolution)
         #items = consolidate_related(items, s)
         all_items.update(items)
         s.update(schedule(items, slots, slot_size(resolution, work)))    
@@ -203,11 +203,11 @@ def itemize(tasks, resolution, work=True):
         i += 1
         slots.append(slot_size(resolution, work))
     return start, slots, items
-    
+
 '''
 Split load-based task into effort-based tasks according to the period.
 '''
-def discretize_load(items, slots, start_date, period):
+def discretize_load(items, slots, start_date, period, resolution):
     new_items = copy(items)
     for k,item in items.iteritems():
         if item.has_key('load') and item['load'] > 0:        
@@ -215,7 +215,7 @@ def discretize_load(items, slots, start_date, period):
             capacity = 0
             new_item = None
             i=0
-            for d in calendar(start_date, size=len(slots)):
+            for d in calendar(start_date, size=len(slots), resolution=resolution):
                 if i < item['from'] or i > item['to']+1:
                     i+=1
                     continue
@@ -266,16 +266,22 @@ Generator of a calendar from the given date.
 def calendar(from_date, to_date=date(2100, 01, 01), size=None, resolution=day, work=True):
     d = from_date
     s = 0
-    while True:
-        while work and d.weekday() == 5 or d.weekday() == 6:
+    if resolution==day:
+        while True:
+            while work and d.weekday() == 5 or d.weekday() == 6:
+                d = d + timedelta(1)
+            yield d
             d = d + timedelta(1)
-        yield d
-        d = d + timedelta(1)
-        s+=1
-        if (size and s >= size ) or d > to_date:
-            break
-    # TODO: resolution week
-    
+            s+=1
+            if (size and s >= size ) or d > to_date:
+                break
+    if resolution==week:
+        d = d - timedelta(days=d.weekday()) # Monday
+        while True:
+            d = d + timedelta(days=7)
+            s+=1
+            if (size and s >= size ) or d > to_date:
+                break            
 '''
 Defines the slot size according to the chosen resolution.
 '''
@@ -288,14 +294,14 @@ def slot_size(resolution, work=True):
 '''
 Renders a schedule
 '''
-def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}):
-    dates, slots, sched = prepare_schedule(tasks)
-    return visualize.render(dates, slots, sched, vars)
+def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=day):
+    dates, slots, sched = prepare_schedule(tasks, resolution)
+    return visualize.render(dates, slots, sched, vars, resolution)
 
-def prepare_schedule(tasks):
+def prepare_schedule(tasks, resolution=day):
     tasks = clean_tasks(tasks)
-    start, slots, sched = schedule_tasks(tasks)
-    dates = [ c for c in calendar(start, size=len(slots)) ]
+    start, slots, sched = schedule_tasks(tasks, resolution=resolution)
+    dates = [ c for c in calendar(from_date=start, size=len(slots)*slot_size(resolution, work=False)) ]
     slots = [ 1.0-v for v in slots ]
     return dates, slots, sched
                 

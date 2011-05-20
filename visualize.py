@@ -20,19 +20,25 @@ from datetime import date, timedelta
 from Cheetah.Template import Template
 tasks_template = Template.compile(file=file('tasks.html', "r"))
 
+# constants for resolution and period
+day=0
+week=1
+month=2
+
 '''
 Renders a schedule as HTML.
 '''
-def render(dates, slots, tasks, vars):
+def render(dates, slots, tasks, vars, resolution):
     slots = round_list(slots)
     ftasks = []
-    g, separators = groups(dates, slots)
+    g, separators = groups(dates, slots, resolution)
     for t in tasks:
         ftasks.append( (t[0].replace(' ','&nbsp;'), format(round_list(t[1]), separators, round(t[2],3)>round(t[3],3)), t[2], t[3], t[4] ) ) 
         all_vars = { 'dates' : merge(dates, separators_colors(separators)),
              'groups' : g,
              'slots' : format(slots, separators),
-             'tasks' : ftasks
+             'tasks' : ftasks,
+             'weekly' : (resolution==week)
             }
     all_vars.update(vars)
     return str(tasks_template(searchList=[all_vars]))
@@ -40,7 +46,7 @@ def render(dates, slots, tasks, vars):
 '''
 Model for year, month, week headers and week separator.
 '''
-def groups(dates, slots):
+def groups(dates, slots, resolution=day):
     year = []
     month = []
     week = []   
