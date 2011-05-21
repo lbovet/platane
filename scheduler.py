@@ -74,14 +74,14 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
                 if sub_item.startswith(orig_name):
                     # ignore items in overflow
                     if round(item['effort'],3) != round(sum(s[sub_item]),3):
-                        result.append( (sub_item, s[sub_item], all_items[sub_item]['effort'], sum(s[sub_item]), orig_task ))
+                        result.append( [sub_item, s[sub_item], all_items[sub_item]['effort'], sum(s[sub_item]), orig_task] )
                         continue
                     summed_effort = summed_effort+item['effort']
                     for i in range(len(slots)):
                         summed_slots[i]=summed_slots[i]+s[sub_item][i]
-            result.append( (orig_name, summed_slots, summed_effort, sum(summed_slots), orig_task ))                       
+            result.append( [orig_name, summed_slots, summed_effort, sum(summed_slots), orig_task] )                       
         else:
-            result.append( (name, s[name], all_items[name]['effort'], sum(s[name]), task_dict[name] )) 
+            result.append( [name, s[name], all_items[name]['effort'], sum(s[name]), task_dict[name] ]) 
     return start_date, slots, result
     
 '''
@@ -279,6 +279,7 @@ def calendar(from_date, to_date=date(2100, 01, 01), size=None, resolution=day, w
         d = d - timedelta(days=d.weekday()) # Monday
         while True:
             d = d + timedelta(days=7)
+            yield d
             s+=1
             if (size and s >= size ) or d > to_date:
                 break            
@@ -298,13 +299,32 @@ def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=day):
     dates, slots, sched = prepare_schedule(tasks, resolution)
     return visualize.render(dates, slots, sched, vars, resolution)
 
-def prepare_schedule(tasks, resolution=day):
+def prepare_schedule(tasks, resolution=day, work=True):
     tasks = clean_tasks(tasks)
-    start, slots, sched = schedule_tasks(tasks, resolution=resolution)
-    dates = [ c for c in calendar(from_date=start, size=len(slots)*slot_size(resolution, work=False)) ]
+    start, slots, sched = schedule_tasks(tasks, resolution=resolution)    
+    
+    print start, slots, sched
+    
     slots = [ 1.0-v for v in slots ]
+    dates = [ c for c in calendar(from_date=start, size=len(slots)) ]
+    if resolution==week:
+        slots = dailify(slots, start, work)
+        for s in sched:
+            s[1] = dailify(s[1], start, work)
     return dates, slots, sched
-                
+            
+'''
+Transforms a week-based list into a day-based list.
+'''
+def dailify(list, start, work=True):
+    result=[]
+    i=0
+    for d in calendar(start, size=len(list), resolution=week):        
+        days= 5 - d.weekday()
+        result.extend([list[i]]*days)
+        i+=1
+    return result
+        
 '''
 Complete data and removes inconsistencies in tasks
 '''

@@ -28,7 +28,7 @@ month=2
 '''
 Renders a schedule as HTML.
 '''
-def render(dates, slots, tasks, vars, resolution):
+def render(dates, slots, tasks, vars, resolution=day):
     slots = round_list(slots)
     ftasks = []
     g, separators = groups(dates, slots, resolution)
