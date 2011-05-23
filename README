@@ -6,12 +6,12 @@ A RESTful minimalistic application to plan work load of human resources.
 Features
 --------
 
+* Web UI
 * Automatic scheduling of tasks
 * Highlighting of tasks in overflow
-* Web view of the schedule
 
 Coming soon:
-* Web UI and REST API to manage tasks
+* REST API to manage tasks
 * Export of generated schedule as Excel file
 
 Dreams:
@@ -28,12 +28,6 @@ Requirements
 Installation & Usage
 --------------------
 
-Platane is under development.
+* python platane.py
+* Open your browser on http://localhost:8080/
 
-Currently, only the scheduler.py script can be used:
-
-* Edit the end of scheduler.py script to defined your own tasks.
-
-    python scheduler.py > output.html
-
-* Open output.html in your browser.
