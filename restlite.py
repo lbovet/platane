@@ -102,7 +102,10 @@ def router(routes):
                     start_response(env.get('RESPONSE_STATUS', '200 OK'), headers)
                     if _debug: 
                         if response: print headers, '\n'+str(response)[:256]
-                    return [ response ]
+                    if type(response) == str:
+                        return [ response ]
+                    else:
+                        return ""
 
         start_response('404 Not Found', [('Content-Type', 'text/plain')])
         return ['Use one of these URL forms\n  ' + '\n  '.join(str(x[0]) for x in routes)]
