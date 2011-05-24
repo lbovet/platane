@@ -125,7 +125,6 @@ def handle(env, start_response, handler, m=None):
             redirect = model.normalize(redirect)
             close=''
             qs = urlparse.parse_qs(env['QUERY_STRING'])
-            print qs
             if 'c' in qs:
                 if qs['c'][0]=='0':
                     close='?c=1'
@@ -153,7 +152,7 @@ def get_path(env):
 def show_tasks(path, env):
     tasks = []
     model.traverse( model.parent(path), lambda p : tasks.append(p[1]) )
-    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks' }, resolution=week ), 'text/html'
+    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks' }), 'text/html'
     
 def show_unit_tasks(path, env):
     schedules_by_date = {}
@@ -164,7 +163,7 @@ def show_unit_tasks(path, env):
     for person in model.load(people):
         tasks = []
         model.traverse( people+'/'+person, lambda p : tasks.append(p[1]) )
-        dates, slots, sched = scheduler.prepare_schedule(tasks)
+        dates, slots, sched = scheduler.prepare_schedule(tasks, resolution=day)
         if dates[0] < min_date:
             min_date = dates[0]
         if dates[-1] > max_date:

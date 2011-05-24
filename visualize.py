@@ -31,22 +31,21 @@ Renders a schedule as HTML.
 def render(dates, slots, tasks, vars, resolution=day):
     slots = round_list(slots)
     ftasks = []
-    g, separators = groups(dates, slots, resolution)
+    g, separators = groups(dates, slots)
     for t in tasks:
         ftasks.append( (t[0].replace(' ','&nbsp;'), format(round_list(t[1]), separators, round(t[2],3)>round(t[3],3)), t[2], t[3], t[4] ) ) 
-        all_vars = { 'dates' : merge(dates, separators_colors(separators)),
-             'groups' : g,
-             'slots' : format(slots, separators),
-             'tasks' : ftasks,
-             'weekly' : (resolution==week)
-            }
+    all_vars = { 'dates' : merge(dates, separators_colors(separators)),
+         'groups' : g,
+         'slots' : format(slots, separators),
+         'tasks' : ftasks
+        }
     all_vars.update(vars)
     return str(tasks_template(searchList=[all_vars]))
 
 '''
 Model for year, month, week headers and week separator.
 '''
-def groups(dates, slots, resolution=day):
+def groups(dates, slots):
     year = []
     month = []
     week = []   

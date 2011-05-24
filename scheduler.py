@@ -41,7 +41,7 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
     task_dict = {}
     for i in tasks:
         task_dict[i['name']] = i
-    start_date, slots, prio_items = itemize(tasks, resolution, work)
+    start_date, end_date, slots, prio_items = itemize(tasks, resolution, work)
     s = {}
     all_items = {}  # store all generated items for later sorting
     base_slots = copy(slots) # slots for calculating discrete load
@@ -82,7 +82,7 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
             result.append( [orig_name, summed_slots, summed_effort, sum(summed_slots), orig_task] )                       
         else:
             result.append( [name, s[name], all_items[name]['effort'], sum(s[name]), task_dict[name] ]) 
-    return start_date, slots, result
+    return start_date, end_date, slots, result
     
 '''
 Sort the items in order of appearance. Returns the name list.
@@ -177,7 +177,7 @@ def itemize(tasks, resolution, work=True):
     slots = []
     items = {}
     i = 0
-    for d in calendar(start, end, resolution):        
+    for d in calendar(start, end, resolution=resolution):        
         for t in tasks:
             if t.has_key('priority'):
                 priority = t['priority']
@@ -194,7 +194,7 @@ def itemize(tasks, resolution, work=True):
                 item['effort'] = t['effort']
             if t.has_key('load'):
                 item['load'] = t['load']
-            if t['from'] >= d:
+            if i==0 or t['from'] >= d:
                 item['from'] = i
             if t['to'] < start:
                 item['to'] = 0
@@ -202,7 +202,7 @@ def itemize(tasks, resolution, work=True):
                 item['to'] = i                  
         i += 1
         slots.append(slot_size(resolution, work))
-    return start, slots, items
+    return start, end, slots, items
 
 '''
 Split load-based task into effort-based tasks according to the period.
@@ -275,13 +275,13 @@ def calendar(from_date, to_date=date(2100, 01, 01), size=None, resolution=day, w
             s+=1
             if (size and s >= size ) or d > to_date:
                 break
-    if resolution==week:
-        d = d - timedelta(days=d.weekday()) # Monday
+    if resolution==week:                
         while True:
-            d = d + timedelta(days=7)
             yield d
+            d = d - timedelta(days=d.weekday()) # Monday
+            d = d + timedelta(days=7)            
             s+=1
-            if (size and s >= size ) or d > to_date:
+            if (size and s >= size ) or d > to_date:                
                 break            
 '''
 Defines the slot size according to the chosen resolution.
@@ -301,27 +301,28 @@ def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=day):
 
 def prepare_schedule(tasks, resolution=day, work=True):
     tasks = clean_tasks(tasks)
-    start, slots, sched = schedule_tasks(tasks, resolution=resolution)    
-    
-    print start, slots, sched
-    
-    slots = [ 1.0-v for v in slots ]
-    dates = [ c for c in calendar(from_date=start, size=len(slots)) ]
+    start, end, slots, sched = schedule_tasks(tasks, resolution=resolution)        
     if resolution==week:
-        slots = dailify(slots, start, work)
+        slots = dailify(slots, start, end, work)
         for s in sched:
-            s[1] = dailify(s[1], start, work)
+            s[1] = dailify(s[1], start, end, work)
+    slots = [ 1.0-v for v in slots ]
+    dates = [ c for c in calendar(start, size=len(slots)) ]
     return dates, slots, sched
             
 '''
 Transforms a week-based list into a day-based list.
 '''
-def dailify(list, start, work=True):
+def dailify(list, start, end, work):
     result=[]
     i=0
-    for d in calendar(start, size=len(list), resolution=week):        
-        days= 5 - d.weekday()
-        result.extend([list[i]]*days)
+    if work:
+        week_size = 5
+    else:
+        week_size = 7
+    for d in calendar(start, end, resolution=week):        
+        days= week_size - d.weekday()
+        result.extend([ list[i] / week_size]*days)
         i+=1
     return result
         

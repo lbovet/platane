@@ -79,7 +79,7 @@ def pivoting(matrix,ans,i,j):
         new_row = list()
         for k in range(len(matrix[-1])):
             new_row.append(matrix[i][j]*matrix[l][k]-matrix[l][j]*matrix[i][k])
-        ans[l]=matrix[i][j]*ans[l]-matrix[l][j]*ans[i]
+        ans[l]=matrix[i][j]*ans[l]-matrix[l][j]*ans[i]        
         matrix[l]=new_row
     return (matrix,ans)
 
