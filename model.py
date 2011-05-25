@@ -223,8 +223,9 @@ def get_attributes(element):
         
 # filesystem implementation
 
-root = 'data'
-schema = yaml.load( file(root+'/schema', 'r'))
+data = 'data'
+root = data+'/root'
+schema = yaml.load( file(data+'/schema', 'r'))
 
 import os, os.path, shutil
 
