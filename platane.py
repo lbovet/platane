@@ -209,7 +209,7 @@ if __name__ == '__main__':
     import sys
     from wsgiref.simple_server import make_server
     
-    httpd = make_server('', 8080, application)
+    httpd = make_server('', 7780, application)
     
     try: httpd.serve_forever()
     except KeyboardInterrupt: pass
