@@ -22,6 +22,7 @@ import model
 import urlparse
 import urllib
 import datetime
+import optparse
 import scheduler
 import visualize
 from Cheetah.Template import Template
@@ -33,8 +34,6 @@ month=2
 
 list_template = Template.compile(file=file('list.html', "r"))
 task_template = Template.compile(file=file('task.html', "r"))
-
-#restlite._debug = True
 
 def do_get(env, start_response):
     return handle(env, start_response, get_body)
@@ -207,9 +206,22 @@ application = restlite.router(routes)
     
 if __name__ == '__main__':
     import sys
-    from wsgiref.simple_server import make_server
-    
-    httpd = make_server('', 7780, application)
-    
+    from wsgiref.simple_server import make_server    
+    opt_parser=optparse.OptionParser()    
+    opt_parser.add_option("-r", "--root", dest="root",
+                      help="Root for data", metavar="ROOT")
+    opt_parser.add_option("-p", "--port", dest="port",
+                      help="Listen port (defaults to 7780)", metavar="PORT")
+    opt_parser.add_option("-d", action="store_true", dest="debug", help="Logs debug information on the console")
+    (options, args) = opt_parser.parse_args()    
+    if options.root:
+        model.root = options.root
+    if options.debug:
+        restlite._debug = True
+    if options.port:
+        port = int(options.port)
+    else:
+        port = 7780        
+    httpd = make_server('', port, application)    
     try: httpd.serve_forever()
     except KeyboardInterrupt: pass
