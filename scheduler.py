@@ -178,6 +178,11 @@ Returns a schedulable structure: {
 '''
 def itemize(tasks, resolution, work=True):
     start, end = bounds(tasks, resolution)
+    for t in tasks:
+        if not t.has_key('to') or not t['to']:
+            t['to'] = date.today()+timedelta(days=365)
+            if t['effort'] > 0:
+                end = end + timedelta(t['effort'])
     slots = []
     items = {}
     i = 0
@@ -265,10 +270,9 @@ def bounds(tasks, resolution):
     for t in tasks:
         if t['from'] < s:
             s = t['from']
-        if t['to'] > e:
+        if t.has_key('to') and t['to'] and t['to'] > e:
             e = t['to']
     return s, e
-    
 '''
 Generator of a calendar from the given date.
 '''
@@ -343,8 +347,6 @@ def clean_tasks(tasks):
     for task in tasks:
         if not task.has_key('from') or not task['from']:
             task['from'] = date.today()
-        if not task.has_key('to') or not task['to']:
-            task['to'] = date.today()+timedelta(days=90)
         if ( 'effort' in task and task['effort'] > 0) or ( 'load' in task and task['load'] > 0):
             good_tasks.append(task)
         if 'load' in task:
