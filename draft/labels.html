@@ -1,0 +1,619 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+ 
+
+
+
+
+    <title>planning - IT121 - platane 0.2</title>
+    <style>
+    body { background-color: white; font-family: helvetica; }
+    body,td { font-size: 10pt; font-family: helvetica; }
+    .frame { border: 1px solid lightgrey; margin: 80px; padding: 30px; float:left; }
+    table { text-align: center; border-collapse: collapse; border-right: 1px solid lightgrey;}
+    .legend {
+            font-size: 8pt;
+            border: 1px solid lightgrey;
+            color: gray;
+    }
+    small, .small {
+        font-size: 8pt;
+    }
+    .tiny {
+        font-size: 6pt;
+    }
+    .light { color: gray; }
+    .slot {
+        border-top: 1px solid white;
+         border-left: 1px solid white;
+         border-bottom: 1px solid white}
+    .week { border-left: 1px solid lightgrey;
+            border-top: 1px solid lightgrey; }
+    .total { border-bottom: 2px solid white; }
+    .title { text-align: right; vertical-align: middle; padding: 3px;
+        border-top: 0px solid;
+        border-left: 0px solid;
+        border-bottom: 0px solid;
+    }
+    .overflow {
+        color: #bb2222;
+    }
+    .hasTooltip {
+        text-decoration: none;
+        color: gray;
+    }
+
+    .hasTooltip:hover {
+        text-decoration: none;
+    }
+
+    .hasTooltip span {
+        display: none;
+        color: #000033;
+        text-decoration: none;
+        padding: 3px;
+    }
+    
+    .moving {
+        position: absolute;
+    }
+    
+    .hasTooltip:hover span {
+        text-decoration: none;
+        font-family: helvetica;
+        font-size: 10pt;
+        display: block;
+        position: absolute;
+        background-color: #FFF;
+        border: 1px solid #CCC;
+        margin: -2em 1em;
+    }
+    
+    a { color: black; text-decoration: none; }
+    a:hover { color:black; text-decoration: underline; }
+    a:visited { color: black; }
+    a.overflow {
+        color: #bb2222;
+    }
+    </style>
+</head><body>
+<div class="frame">
+<div style="width: 22em;"></div>
+    <small>
+    <a href="http://localhost:7780/">home</a> 
+        &gt; <a href="http://localhost:7780/units/">units</a>
+        &gt; <a href="http://localhost:7780/units/IT121/">IT121</a>
+    </small>
+<h2><span class="light">IT121</span> planning</h2>
+<table>
+<tbody><tr><td class="title"></td><td class="title"></td>
+        <td class="legend" colspan="65"><span><a href="#" class="hasTooltip">2011<span>25%
+            <small>98 days free</small>
+        </span></a></span></td>
+</tr>
+<tr><td class="title"></td><td class="title"></td>
+        <td class="legend" colspan="5"><a href="#" class="hasTooltip">May<span>55%
+            <small>4.5 days free</small>
+        </span></a></td>
+        <td class="legend" colspan="22"><a href="#" class="hasTooltip">June<span>52%
+            <small>21.0 days free</small>
+        </span></a></td>
+        <td class="legend" colspan="21"><a href="#" class="hasTooltip">July<span>5%
+            <small>40.0 days free</small>
+        </span></a></td>
+        <td class="legend" colspan="17"><a href="#" class="hasTooltip">August<span>4%
+            <small>32.5 days free</small>
+        </span></a></td>
+</tr>
+<tr><td class="title"></td><td class="title"></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">25</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">26</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">27</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">30</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">31</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">1</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">2</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">3</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">6</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">7</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">8</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">9</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">10</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">13</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">14</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">15</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">16</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">17</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">20</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">21</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">22</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">23</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">24</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">27</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">28</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">29</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">30</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">1</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">4</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">5</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">6</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">7</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">8</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">11</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">12</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">13</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">14</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">15</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">18</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">19</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">20</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">21</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">22</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">25</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">26</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">27</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">28</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">29</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">1</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">2</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">3</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">4</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">5</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">8</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">9</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">10</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">11</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">12</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">15</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">16</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">17</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">18</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">19</div></td>
+        <td class="legend tiny" style="border-left-color: lightgrey;"><div style="width: 1.1em;">22</div></td>
+        <td class="legend tiny" style="border-left-color: white;"><div style="width: 1.1em;">23</div></td>
+</tr>
+<tr><td class="title light">total</td><td class="title light">65</td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#888888"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>75%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#888888"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>75%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#888888"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>75%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#888888"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>75%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#888888"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>75%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#aaaaaa"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#cccccc"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>25%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#cccccc"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>25%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#cccccc"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>25%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#cccccc"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>25%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#cccccc"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>25%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#cccccc"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>25%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#cccccc"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>25%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: lightgrey;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+        <td class="slot total" style="border-left-color: white;" bgcolor="#ffffff"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>0%</span></a></td>
+</tr>
+<tr>
+    <td class="title ">
+        <a target="_new" class="" href="http://localhost:7780/units/IT121/people/bovetl/planning?c=1">bovetl</a>
+    </td><td class="title light">26.0</td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" colspan="5" bgcolor="#444444">
+                <a href="#" class="hasTooltip" style="color: white; font-size:0.4em;"><div style="width: 10em; height: 3em; overflow: hidden;">SORPLA, ELVIS, Architecture, FEJAVA</div><span>100%</span></a>
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#444444">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>100% <small>on bovetl</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+</tr>
+<tr>
+    <td class="title ">
+        <a target="_new" class="" href="http://localhost:7780/units/IT121/people/monnatx/planning?c=1">monnatx</a>
+    </td><td class="title light">6.0</td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#aaaaaa">
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>50% <small>on monnatx</small>
+                </span></a>
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: lightgrey;" bgcolor="#ffffff">
+        </td>
+        <td class="slot" style="border-left-color: white;" bgcolor="#ffffff">
+        </td>
+</tr>
+<tr><td class="title">
+</td><td class="title"></td>
+        <td class="legend week" colspan="3"><a href="#" class="hasTooltip">21<span>50%
+            <small>3.0 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">22<span>55%
+            <small>4.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">23<span>55%
+            <small>4.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">24<span>55%
+            <small>4.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">25<span>55%
+            <small>4.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">26<span>35%
+            <small>6.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">27<span>5%
+            <small>9.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">28<span>5%
+            <small>9.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">29<span>5%
+            <small>9.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">30<span>5%
+            <small>9.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">31<span>5%
+            <small>9.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">32<span>5%
+            <small>9.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="5"><a href="#" class="hasTooltip">33<span>5%
+            <small>9.5 days free</small>
+        </span></a></td>
+        <td class="legend week" colspan="2"><a href="#" class="hasTooltip">34<span>0%
+            <small>4.0 days free</small>
+        </span></a></td>
+</tr>
+</tbody></table>
+</div>
+</body></html>
