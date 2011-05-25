@@ -28,6 +28,16 @@ Requirements
 Installation & Usage
 --------------------
 
-* python platane.py
+* ./platane.py
 * Open your browser on http://localhost:7780/
+
+Customize
+---------
+
+* See options with ./platane.py -h
+
+Data is stored by default under the data/ dir. To have it somewhere else,
+
+* Either specify where with the --root option.
+* Or create ~/.platane/root
 

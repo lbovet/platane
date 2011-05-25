@@ -205,7 +205,19 @@ routes = [
 application = restlite.router(routes)
     
 if __name__ == '__main__':
-    import sys
+    import sys, os, os.path, getpass
+    
+    if sys.platform == 'win32':
+        import _winreg
+        HOME_PLATANE_DIR = _winreg.ExpandEnvironmentStrings(u'%APPDATA%\\Platane\\')
+    else:
+        HOME_PLATANE_DIR = os.path.expanduser("~"+getpass.getuser())+'/.platane/'
+    
+    root=None
+    home_root=HOME_PLATANE_DIR+"root"
+    if os.path.exists(home_root):
+        root=home_root
+    
     from wsgiref.simple_server import make_server    
     opt_parser=optparse.OptionParser()    
     opt_parser.add_option("-r", "--root", dest="root",
@@ -213,9 +225,11 @@ if __name__ == '__main__':
     opt_parser.add_option("-p", "--port", dest="port",
                       help="Listen port (defaults to 7780)", metavar="PORT")
     opt_parser.add_option("-d", action="store_true", dest="debug", help="Logs debug information on the console")
-    (options, args) = opt_parser.parse_args()    
+    (options, args) = opt_parser.parse_args()
     if options.root:
         model.root = options.root
+    elif root:
+        model.root = root
     if options.debug:
         restlite._debug = True
     if options.port:
@@ -223,5 +237,6 @@ if __name__ == '__main__':
     else:
         port = 7780        
     httpd = make_server('', port, application)    
+    print "Hello, platane runs on http://localhost:"+str(port)+"/"
     try: httpd.serve_forever()
     except KeyboardInterrupt: pass
