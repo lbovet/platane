@@ -7,15 +7,22 @@ root:
                         list:
                             dict:
                                 tasks:
-                                    list: &task
-                                        attributes:
+                                    list: 
+                                        attributes: &task
                                             name: str
                                             description: str
                                             priority: int
                                             from: date
                                             to: date
                                             effort: float
-                                            load: float                            
+                                            load: float  
+                                jira:
+                                    list: 
+                                        attributes: *task
+                                        handlers: 
+                                            load: jira_load_task
+                                    handlers: 
+                                        load: jira_load_list
                                 planning:
                                     render:
                                         function: show_tasks                                                                                    

@@ -20,6 +20,8 @@ import yaml
 import datetime
 import re
 
+handlers = {}
+
 # interface 
 
 ''''
@@ -38,12 +40,14 @@ def describe(path):
     attributes = None
     children = None
     type = None
+    handlers = {}
 
-    for name in path.split('/'):                
+    for name in path.split('/'):              
         if len(name.strip()) == 0:
-            continue        
+            continue                
         if children and name in children:
-            element = element[name]
+            element = element[name]        
+        handlers.update(get_handlers(element))
         level = as_dict(element)
         if level:
             type = 'dict'
@@ -77,6 +81,8 @@ def describe(path):
         result['attributes'] = attributes
     if children:
         result['children'] = children        
+    if handlers:
+        result['handlers'] = handlers  
     return result
     
 '''
@@ -87,6 +93,12 @@ def create(path):
     path = normalize(path)
     d = describe(path)
     if d:
+        if 'handlers' in d:
+            if 'create' in d['handlers']:
+                handlers[d['handlers']['create']](path)
+                return
+            else:
+                raise Exception("Read only")
         create_internal(path, d)
     else:
         raise NotFoundException('Invalid path '+path)
@@ -96,13 +108,19 @@ Loads the attributes or items of given path.
 '''
 def load(path):
     path = normalize(path)
-    d = describe(path)
+    d = describe(path)   
     if d:
         result = None
         if d['type'] == 'dict':
             return d['children']
         else:
-            result = load_internal(path, d)        
+            if 'handlers' in d:
+                if 'load' in d['handlers']:
+                    result = handlers[d['handlers']['load']](path)
+                else:
+                    raise Exception("Write only")
+            else:
+                result = load_internal(path, d)        
         if d['type'] == 'leaf':
             check_attributes(result, d['attributes'])
             result['url'] = path+"/"
@@ -118,7 +136,13 @@ def save(path, attributes):
     d = describe(path)
     if d and d['type'] == 'leaf':
         check_attributes(attributes, d['attributes'])
-        save_internal(path, attributes, d)
+        if 'handlers' in d:
+            if 'save' in d['handlers']:
+                handlers[d['handlers']['save']](path, attributes)
+            else:
+                raise Exception("Read only")
+        else:
+            save_internal(path, attributes, d)
     else:
         raise NotFoundException('Invalid path or non-leaf path: '+path)
 
@@ -129,7 +153,13 @@ def delete(path):
     path = normalize(path)
     d = describe(path)
     if d and describe(parent(path))['type'] == 'list':
-        delete_internal(path, d)      
+        if 'handlers' in d:
+            if 'delete' in d['handlers']:
+                handlers[d['handlers']['delete']](path)
+            else:
+                raise Exception("Read only")
+        else:
+            delete_internal(path, d)      
     else:
         raise NotFoundException('Invalid path or not deletable: '+path)
 
@@ -221,6 +251,12 @@ def get_attributes(element):
     if element.has_key('attributes'):
         return element['attributes']
         
+def get_handlers(element):
+    if element.has_key('handlers'):
+        return element['handlers']
+    else:
+        return {}
+
 # filesystem implementation
 
 data = 'data'
@@ -229,7 +265,7 @@ schema = yaml.load( file(data+'/schema', 'r'))
 
 import os, os.path, shutil
 
-def create_internal(path, d):
+def create_internal(path, d):        
     if d['type'] == 'leaf':
         if not os.path.exists(root+parent(path)):
             os.makedirs(root+'/'.join(path.split('/')[:-1]))

@@ -223,7 +223,7 @@ def discretize_load(items, slots, start_date, period, resolution):
                     start = (d.weekday() == 0)             
                 if period == month:
                     start = (d.day == 1)
-                if start and new_item or i == item['to']+1 or i == len(slots):
+                if new_item and (start or i == item['to']+1 or i == len(slots)):
                     # close the new item
                     new_item['to'] = i-1
                     new_item['name'] = new_item['name']+"]"
@@ -295,7 +295,7 @@ def slot_size(resolution, work=True):
 '''
 Renders a schedule
 '''
-def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=day):
+def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=week):
     dates, slots, sched = prepare_schedule(tasks, resolution)
     return visualize.render(dates, slots, sched, vars, resolution)
 

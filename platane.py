@@ -25,6 +25,8 @@ import datetime
 import optparse
 import scheduler
 import visualize
+import jira
+import re
 from Cheetah.Template import Template
 
 # constants for resolution and period
@@ -162,7 +164,7 @@ def show_unit_tasks(path, env):
     for person in model.load(people):
         tasks = []
         model.traverse( people+'/'+person, lambda p : tasks.append(p[1]) )
-        dates, slots, sched = scheduler.prepare_schedule(tasks, resolution=day)
+        dates, slots, sched = scheduler.prepare_schedule(tasks, resolution=week)
         if dates[0] < min_date:
             min_date = dates[0]
         if dates[-1] > max_date:
@@ -194,6 +196,17 @@ def show_unit_tasks(path, env):
 
     return visualize.render(dates, slots, sorted(s), vars={'qs':{}, 'context':'/', 'path':path, 'sum':True }), "text/html"
 
+def jira_load_list(path):
+    m=re.match(r"^.*people/([^/]+).*$", path)
+    username=m.group(1)
+    return jira.load_keys(username)
+model.handlers['jira_load_list'] = jira_load_list
+
+def jira_load_task(path):
+    m=re.match(r"^.*/([^/]+)$", path)
+    key=m.group(1)
+    return jira.load_task(key)    
+model.handlers['jira_load_task'] = jira_load_task
 
 routes = [
     (r'GET /(?P<path>.*)', do_get),    
@@ -209,12 +222,12 @@ if __name__ == '__main__':
     
     if sys.platform == 'win32':
         import _winreg
-        HOME_PLATANE_DIR = _winreg.ExpandEnvironmentStrings(u'%APPDATA%\\Platane\\')
+        home_config = _winreg.ExpandEnvironmentStrings(u'%APPDATA%\\Platane\\')
     else:
-        HOME_PLATANE_DIR = os.path.expanduser("~"+getpass.getuser())+'/.platane/'
+        home_config = os.path.expanduser("~"+getpass.getuser())+'/.platane/'
     
     root=None
-    home_root=HOME_PLATANE_DIR+"root"
+    home_root=home_config+"root"
     if os.path.exists(home_root):
         root=home_root
     
