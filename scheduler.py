@@ -218,6 +218,7 @@ corresponding to each week: (slot_start, nb_days, max_effort).
 def max_week_effort(items, slots, start_date, end_date, resolution):
     result = {}
     upper_bound = end_date+timedelta(1)
+    print len(slots)
     for k,item in items.iteritems():
         item_weeks = []
         if item.has_key('load') and item['load'] > 0:        
@@ -227,21 +228,30 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
             max_effort = 0
             slot_start = 0
             for d in calendar(start_date, upper_bound):
+                start = (d.weekday() == 0)                
                 if i < item['from'] or i > item['to']+1:
-                    i+=1
-                    continue
-                start = (d.weekday() == 0)             
-                if days > 0 and ( start or i > item['to'] or d == upper_bound):
+                    if resolution==day:
+                        i+=1
+                    if resolution==week and i>0 and start:
+                        i+=1                        
+                    continue                             
+                if days > 0 and ( start or i > item['to'] or d == upper_bound or i == len(slots) ):
                     # close the new week
                     week_tuple = (days, max_effort)
                     item_weeks.append(week_tuple)
                     days = 0
                     max_effort = 0
-                if d == upper_bound:
-                    break
+                if d == upper_bound or i == len(slots):
+                    break                
+                if resolution==day:
+                    max_effort = max_effort + load * slots[i]
+                    i+=1
+                if resolution==week and days==0:
+                    print d, i
+                    max_effort = load * slots[i]
+                    i+=1
                 days+=1
-                max_effort = max_effort + load * slots[i]
-                i+=1
+ 
         result[item['name']] = item_weeks
     return result
     
