@@ -44,9 +44,16 @@ def get_body(path, d, m, env):
     parent_type = None
     parent = model.parent(path)
     qs = urlparse.parse_qs(env['QUERY_STRING'])
-
+    refreshable = False
     if parent:
         parent_type = model.describe(parent)['type']
+    if 'cache' in d:
+        print 'CACHED'        
+        if 'r' in qs and qs['r'][0]=='1':
+            print 'INVALIDATING'
+            model.invalid_cache(model.normalize(path))
+        refreshable = True
+    vars = { 'context': '/', 'path':path, 'parent_type': parent_type, 'qs': qs, 'refreshable': refreshable, 'url' : path+"/"}
     if d['type'] == 'leaf':
         for k,v in m.iteritems():
             if v and type(v) == datetime.date:
@@ -61,9 +68,11 @@ def get_body(path, d, m, env):
             for k in m.keys():
                 if k in qs:
                     m[k] = qs[k][0]
-        return str(task_template(searchList=[ { 'context': '/', 'path':path, 'parent_type': parent_type, 'attributes': m, 'errors': errors, 'qs': qs} ])), None
+        vars.update({ 'attributes': m, 'errors': errors })
+        return str(task_template(searchList=[ vars ])), None
     else:
-        return str(list_template(searchList=[ { 'context': '/', 'path':path, 'parent_type': parent_type, 'list' : m, 'type':  d['type'], 'qs':qs } ])), None
+        vars.update( { 'list' : m, 'type':  d['type'] })
+        return str(list_template(searchList=[ vars ])), None
 
 def do_put(env, start_response):
     return handle(env, start_response, save_body, m=get_post(env))
@@ -153,7 +162,7 @@ def get_path(env):
 def show_tasks(path, env):
     tasks = []
     model.traverse( model.parent(path), lambda p : tasks.append(p[1]) )
-    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks' }, resolution=week), 'text/html'
+    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks', 'url': path+'/', 'refreshable': False }, resolution=week), 'text/html'
     
 def show_unit_tasks(path, env):
     schedules_by_date = {}
@@ -193,8 +202,7 @@ def show_unit_tasks(path, env):
     s = []
     for i in schedules_by_date.values():
         s.extend(i)
-
-    return visualize.render(dates, slots, sorted(s), vars={'qs':{}, 'context':'/', 'path':path, 'sum':True }), "text/html"
+    return visualize.render(dates, slots, sorted(s), vars={'qs':{}, 'context':'/', 'path':path, 'sum':True, 'url': path+'/', 'refreshable': False }), "text/html"
 
 def jira_load_list(path):
     m=re.match(r"^.*people/([^/]+).*$", path)

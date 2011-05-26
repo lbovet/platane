@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xml:lang="en" lang="en">
 
-#set $version='0.3-git'
+#set $version='0.3'
 <head>
 #if 'c' in $qs and $qs['c'][0]=='2':
 <script type="text/javascript">
@@ -110,6 +110,9 @@
 <div class="margin">
 <div class="frame">
 <div style="width: 22em"></div>
+#if $refreshable
+    <div style="float:right"><a href="$url?r=1"><img border="0" src="http://cdn5.iconfinder.com/data/icons/TWG_Retina_Icons/24/arrow_circle_left.png"/></a></div>
+#end if
 #if $name == 'home'
     <small>[ <a href="http://github.com/lbovet/platane">platane</a> $version ]</small>
 #else

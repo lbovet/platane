@@ -19,8 +19,11 @@
 import yaml
 import datetime
 import re
+import copy
 
 handlers = {}
+
+cache = {}
 
 # interface 
 
@@ -41,13 +44,14 @@ def describe(path):
     children = None
     type = None
     handlers = {}
-
+    cache = {}
     for name in path.split('/'):              
         if len(name.strip()) == 0:
             continue                
         if children and name in children:
             element = element[name]        
         handlers.update(get_handlers(element))
+        cache = get_cache(element)
         level = as_dict(element)
         if level:
             type = 'dict'
@@ -83,6 +87,8 @@ def describe(path):
         result['children'] = children        
     if handlers:
         result['handlers'] = handlers  
+    if cache:
+        result['cache'] = cache
     return result
     
 '''
@@ -108,6 +114,10 @@ Loads the attributes or items of given path.
 '''
 def load(path):
     path = normalize(path)
+    cached = load_cache(path)
+    if cached:
+        print "Returning cached "+path
+        return cached
     d = describe(path)   
     if d:
         result = None
@@ -124,6 +134,9 @@ def load(path):
         if d['type'] == 'leaf':
             check_attributes(result, d['attributes'])
             result['url'] = path+"/"
+        if 'cache' in d:
+            print "Caching "+path
+            put_cache(path, result)
         return result
     else:
         raise NotFoundException('Invalid path: '+path)
@@ -214,10 +227,16 @@ def check_date(d):
                 return f[1]( (r, m.groups()) )
         raise Exception()
     return d
+    
+def check_string(s):
+    if isinstance(s, basestring):
+        return s
+    else:
+        return str(s)
 
 types = { 'int': [0, int],
              'date': [ None, check_date],
-             'str': [ "", str ],
+             'str': [ "", check_string ],
              'float': [ 0.0, float ] }
 
 class ParseException(Exception):
@@ -235,6 +254,8 @@ def check_attributes(attr_dict, attr_schema):
                 attr_dict[attr] = types[attr_schema[attr]][0]    
             attr_dict[attr] = types[attr_schema[attr]][1](attr_dict[attr]) # cast to appropriate type
         except:
+            import traceback
+            traceback.print_exc()
             errors.append(attr)
     if len(errors)>0:
         raise ParseException(original_attributes, errors)
@@ -258,6 +279,12 @@ def get_attributes(element):
 def get_handlers(element):
     if element.has_key('handlers'):
         return element['handlers']
+    else:
+        return {}
+
+def get_cache(element):
+    if element.has_key('cache'):
+        return element['cache']
     else:
         return {}
 
@@ -311,6 +338,30 @@ def delete_internal(path, d):
             os.remove(root+path)
         else:
             shutil.rmtree(root+path)
+
+# Cache 
+
+def put_cache(path, object, group='default'):
+    cache[path] = (object, group)
+    
+def load_cache(path):
+    if path in cache:
+        return copy.deepcopy(cache[path][0])
+    
+def invalid_cache(path, parents=True, children=True):
+    p = path
+    while p:
+        if path in cache:
+            del cache[path]
+        if parents:
+            p = parent(p)
+        else:
+            break
+    if children:
+        traverse(path, remove_cache)
+
+def remove_cache(elt):
+    del cache[elt[0]]
 
 # test
 

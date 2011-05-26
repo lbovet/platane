@@ -19,10 +19,12 @@ root:
                                 jira:
                                     list: 
                                         attributes: *task
+                                        cache: true
                                         handlers: 
                                             load: jira_load_task
                                     handlers: 
                                         load: jira_load_list
+                                    cache: true
                                 planning:
                                     render:
                                         function: show_tasks                                                                                    

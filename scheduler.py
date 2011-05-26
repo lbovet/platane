@@ -50,7 +50,6 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
         items = prio_items[priority]    
         all_items.update(items)
         sched, week_effort_limit = schedule(items, slots, slot_size(resolution, work), start_date, end_date,  resolution)
-        print week_effort_limit
         s.update(sched)    
         w.update(week_effort_limit)
         if priority < 0:
@@ -182,7 +181,7 @@ def itemize(tasks, resolution, work=True):
     start, end = bounds(tasks, resolution)
     for t in tasks:
         if not t.has_key('to') or not t['to']:
-            t['to'] = date.today()+timedelta(days=365)
+            t['to'] = end
             if t['effort'] > 0:
                 end = end + timedelta(t['effort'])
     slots = []
@@ -342,9 +341,12 @@ def clean_tasks(tasks):
     for task in tasks:
         if not task.has_key('from') or not task['from']:
             task['from'] = date.today()
-        if ( 'effort' in task and task['effort'] > 0) or ( 'load' in task and task['load'] > 0):
+        if ('effort' in task and float(task['effort']) > 0) or ( 'load' in task and float(task['load']) > 0):
             good_tasks.append(task)
+        if 'effort' in task:
+            task['effort'] = float(task['effort'])
         if 'load' in task:
+            task['load'] = float(task['load'])
             if task['load'] < 0:
                 task['load'] = None
             if  task['load'] > 1:
