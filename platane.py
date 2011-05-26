@@ -258,6 +258,8 @@ if __name__ == '__main__':
     else:
         port = 7780        
     httpd = make_server('', port, application)    
+    print "Pre-loading jira tasks..."
+    model.traverse("/", lambda x : "")
     print "Hello, platane runs on http://localhost:"+str(port)+"/"
     try: httpd.serve_forever()
     except KeyboardInterrupt: pass

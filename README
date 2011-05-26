@@ -24,6 +24,7 @@ Requirements
 * Python 2.6
 * Cheetah template engine: easy_install cheetah
 * pyYAML parser/emitter: easy_install pyyaml
+* Suds soap client: easy_install suds
 
 Installation & Usage
 --------------------

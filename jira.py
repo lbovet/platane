@@ -11,7 +11,6 @@ credentials = json.load(file(os.path.expanduser("~"+getpass.getuser())+'/.platan
 useSoap = True
 
 def load_keys(username):
-    print "LOADING KEYS"
     if useSoap:
         from suds.client import Client
         client = Client('http://%s/rpc/soap/jirasoapservice-v2?wsdl'%jira_host)
@@ -27,7 +26,6 @@ def load_keys(username):
     return sorted(result)
 
 def load_task(issue_key):
-    print "LOADING TASK "+issue_key
     url = jira_scheme+'://%s:%s@%s/rest/api/2.0.alpha1/issue/%s' % (credentials['username'], credentials['password'], jira_host, issue_key)
     detail_string = urllib.urlopen(url).read()
     detail = json.loads(detail_string)

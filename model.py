@@ -131,8 +131,8 @@ def load(path):
                     raise Exception("Write only")
             else:
                 result = load_internal(path, d)        
-        if d['type'] == 'leaf':
-            check_attributes(result, d['attributes'])
+        if d['type'] == 'leaf':            
+            check_attributes(result, d['attributes'], fix=True)
             result['url'] = path+"/"
         if 'cache' in d:
             print "Caching "+path
@@ -217,7 +217,7 @@ def traverse(path, function):
             traverse(path+"/"+child, function)
 
 def check_date(d):
-    if type(d) == str:
+    if isinstance(d, basestring):
         if d.strip() == '':
             return None
         r = datetime.date.today()
@@ -244,7 +244,7 @@ class ParseException(Exception):
         self.attributes = attributes
         self.errors = errors
 
-def check_attributes(attr_dict, attr_schema):
+def check_attributes(attr_dict, attr_schema, fix=False):
     errors = []
     original_attributes = {}
     original_attributes.update(attr_dict)
@@ -254,10 +254,13 @@ def check_attributes(attr_dict, attr_schema):
                 attr_dict[attr] = types[attr_schema[attr]][0]    
             attr_dict[attr] = types[attr_schema[attr]][1](attr_dict[attr]) # cast to appropriate type
         except:
-            import traceback
-            traceback.print_exc()
-            errors.append(attr)
-    if len(errors)>0:
+            if fix:
+                attr_dict[attr] = types[attr_schema[attr]][0] 
+            else:
+                import traceback
+                traceback.print_exc()
+                errors.append(attr)            
+    if not fix and len(errors)>0:
         raise ParseException(original_attributes, errors)
 
 def as_dict(element):

@@ -344,13 +344,19 @@ def clean_tasks(tasks):
         if ('effort' in task and float(task['effort']) > 0) or ( 'load' in task and float(task['load']) > 0):
             good_tasks.append(task)
         if 'effort' in task:
-            task['effort'] = float(task['effort'])
+            try:
+                task['effort'] = float(task['effort'])
+            except:
+                pass
         if 'load' in task:
-            task['load'] = float(task['load'])
-            if task['load'] < 0:
-                task['load'] = None
-            if  task['load'] > 1:
-                task['load'] = min(1.0, task['load'] / 100.0)
+            try:
+                task['load'] = float(task['load'])
+                if task['load'] < 0:
+                    task['load'] = None
+                if  task['load'] > 1:
+                    task['load'] = min(1.0, task['load'] / 100.0)
+            except:
+                pass
     return good_tasks
         
 if __name__ == '__main__':
