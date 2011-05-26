@@ -61,7 +61,7 @@ def get_body(path, d, m, env):
             for k in m.keys():
                 if k in qs:
                     m[k] = qs[k][0]
-        return str(task_template(searchList=[ { 'context': '/', 'path':path, 'parent_type': parent_type, 'attributes': m, 'errors': errors, 'qs': qs } ])), None
+        return str(task_template(searchList=[ { 'context': '/', 'path':path, 'parent_type': parent_type, 'attributes': m, 'errors': errors, 'qs': qs} ])), None
     else:
         return str(list_template(searchList=[ { 'context': '/', 'path':path, 'parent_type': parent_type, 'list' : m, 'type':  d['type'], 'qs':qs } ])), None
 
@@ -153,7 +153,7 @@ def get_path(env):
 def show_tasks(path, env):
     tasks = []
     model.traverse( model.parent(path), lambda p : tasks.append(p[1]) )
-    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks' }), 'text/html'
+    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks' }, resolution=week), 'text/html'
     
 def show_unit_tasks(path, env):
     schedules_by_date = {}

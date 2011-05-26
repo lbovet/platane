@@ -1,29 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html
   PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml" 
+<html xmlns="http://www.w3.org/1999/xhtml"
   xml:lang="en" lang="en">
 
-#set $version='0.2'
+#set $version='0.3-git'
 <head>
 #if 'c' in $qs and $qs['c'][0]=='2':
 <script type="text/javascript">
     window.close()
-    window.opener.location.reload() 
-</script>    
+    window.opener.location.reload()
+</script>
 #end if
-#if $path.strip() == '/' 
+#if $path.strip() == '/'
     #set global $name = 'home'
     #set $window_name = 'home'
-    #set $title_name = 'home'    
+    #set $title_name = 'home'
 #else
     #set global $name = $path.split('/')[-1]
     #set $window_name = $name
     #set $title_name = $name
+
+    #if $getVar('link','') != ''
+       #set $title_name='<a href="'+$link+'" target="_blank">'+$name+'</a>'
+    #else
+       #set $title_name=$name
+    #end if
     #if len($path.split('/')) > 2:
-        #set $title_name = '<span class="light">' +$path.split('/')[-2] + '</span> ' + $name
+        #set $title_name = '<span class="light">' +$path.split('/')[-2] + '</span> ' + $title_name
         #set $window_name = $name + ' - ' + $path.split('/')[-2]
     #end if
 #end if
@@ -31,7 +37,8 @@
     <style>
     body { background-color: white; font-family: helvetica; }
     body,td { font-size: 10pt; font-family: helvetica; }
-    .frame { border: 1px solid lightgrey; margin: 80px; padding: 30px; float:left; }
+    .margin { margin: 80px; float:left; }
+    .frame { border: 1px solid lightgrey; padding: 30px; float:left; }
     table { text-align: center; border-collapse: collapse; border-right: 1px solid lightgrey;}
     .legend {
             font-size: 8pt;
@@ -75,11 +82,11 @@
         text-decoration: none;
         padding: 3px;
     }
-    
+
     .moving {
         position: absolute;
     }
-    
+
     .hasTooltip:hover span {
         text-decoration: none;
         font-family: helvetica;
@@ -90,7 +97,7 @@
         border: 1px solid #CCC;
         margin: -2em 1em;
     }
-    
+
     a { color: black; text-decoration: none; }
     a:hover { color:black; text-decoration: underline; }
     a:visited { color: black; }
@@ -100,13 +107,14 @@
     </style>
 </head>
 <body>
+<div class="margin">
 <div class="frame">
 <div style="width: 22em"></div>
-#if $name == 'home' 
+#if $name == 'home'
     <small>[ <a href="http://github.com/lbovet/platane">platane</a> $version ]</small>
 #else
     <small>
-    <a href="$context">home</a> 
+    <a href="$context">home</a>
     #set $a = $context
     #for $p in $path.split('/')[1:-1]
         #set $a = $a + $p + '/'

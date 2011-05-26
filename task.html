@@ -1,9 +1,16 @@
+#if 'link' in $attributes
+    #set global $link=$attributes['link']
+#end if
 #include "header.html"
 <style>
     .form { text-align: left; border: 0px solid; }
     .normal { }
     .error { background-color: #FFBBBB; }
 </style>
+#if 'description' in $attributes
+    <span class="light">$attributes['description']</span>
+    <br><br>
+#end if
 <form method="POST" name="fields">
     <table class="form">
         #set close = '0'
@@ -19,21 +26,30 @@
         <tr>
             #set $cl = 'error' if 'load' in $errors else 'normal'
             <td>Load</td><td><input class="$cl" size="4" type="text" name="load" value="$attributes.load"></input> %</td>
-        </tr>                
-        <tr>
-            #set $cl = 'error' if 'from' in $errors else 'normal'                
-            <td>Start Date</td><td><input class="$cl" size="10" type="text" name="from" value="$attributes.from"></input></td>
         </tr>
         <tr>
-            #set $cl = 'error' if 'to' in $errors else 'normal'                
+            #set $cl = 'error' if 'from' in $errors else 'normal'
+            <td>Start Date</td><td><input class="$cl" size="10" type="text" name="from" value="$attributes.from"></input> <small class="light">Can be d.m.yyyy, d.m or d</small></td>
+        </tr>
+        <tr>
+            #set $cl = 'error' if 'to' in $errors else 'normal'
             <td>Due Date</td><td><input class="$cl" size="10" type="text" name="to" value="$attributes.to"></input></td>
         </tr>
         <tr>
-            #set $cl = 'error' if 'to' in $errors else 'normal'                
-            <td>Priority</td><td><input class="$cl" size="4" type="text" name="priority" value="$attributes.priority"></input></td>
+            #set $cl = 'error' if 'priority' in $errors else 'normal'
+            <td>Priority</td><td><input class="$cl" size="4" type="text" name="priority" value="$attributes.priority"> <small class="light">Can be negative</small></input></td>
         </tr>
     </table><br>
-    <input type="submit" style="width: 5em" value="Ok"/>        
+    <input type="submit" style="width: 5em" value="Ok"/>
+    <input type="submit" style="width: 5em" value="Cancel" onclick="
+    #if $close=='1'
+        window.close();
+    #else
+        history.back();
+    #end if
+    return false;
+    "
+    />
 </form>
 <form method="POST" onsubmit="return confirm('Really want to delete $attributes.name ?')">
     <input type="hidden" name="method" value="DELETE"/>
@@ -43,4 +59,4 @@
     document.fields.effort.focus();
     document.fields.effort.select();
 </script>
-#include "footer.html"                
+#include "footer.html"

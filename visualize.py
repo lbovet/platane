@@ -80,9 +80,9 @@ def color(value, overflow=False):
     if value == 0.0:
         return '#ffffff'
     if value < 0.2:
-        return '#eeeeee' if not overflow else '#ffcccc'
+        return '#dddddd' if not overflow else '#ffcccc'
     if value < 0.4:
-        return '#cccccc' if not overflow else '#eeaaaa'
+        return '#c0c0c0' if not overflow else '#eeaaaa'
     if value < 0.6:
         return '#aaaaaa' if not overflow else '#dd8888'
     if value < 0.8:

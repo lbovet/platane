@@ -42,7 +42,7 @@
     #end if
     <td class="title $highlight">
     #if 'url' in $t[4]
-        <a target="_new" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>
+        <a target="_blank" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>
     #else
         $t[0]
     #end if
@@ -53,7 +53,7 @@
                 <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i[0][0]*100))% <small>on $t[0]</small>
                 #if (round($t[3],3) != round($t[2],3))
                     but lacks $round(t[2]-t[3], 1) days!
-                #end if 
+                #end if
                 </span></a>
             #end if
         </td>

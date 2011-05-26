@@ -194,7 +194,11 @@ date_formats = ( (re.compile(r'^([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=i
 def traverse(path, function):
     d = describe(path)
     if d['type'] == 'leaf':
-        function( (path, load(path), d ) )
+        try:
+            function( (path, load(path), d ) )
+        except ParseException, e:
+            import traceback
+            traceback.print_exc() 
     if d['type'] == 'dict' or d['type'] == 'list':
         for child in load(path):
             traverse(path+"/"+child, function)
