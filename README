@@ -9,13 +9,11 @@ Features
 * Web UI
 * Automatic scheduling of tasks
 * Highlighting of tasks in overflow
+* Integration with Jira
 
 Coming soon:
 * REST API to manage tasks
 * Export of generated schedule as Excel file
-
-Dreams:
-* Adapters in Jira and similar tools to send tasks to Platane
 * Adapter for Outlook to send tasks/holidays to Platane
 
 Requirements
