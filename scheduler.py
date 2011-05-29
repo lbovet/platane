@@ -204,6 +204,8 @@ def itemize(tasks, resolution, work=True):
                 items[category][t['name']] = {}
             item = items[category][t['name']]
             item['name'] = t['name']
+            item['from_date'] = t['from']
+            item['to_date'] = t['to']
             if 'priority' in t:
                 item['priority'] = t['priority']
             else:
@@ -241,26 +243,28 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
             i=0
             days=0
             max_effort = 0
-            slot_start = 0
+            print item['name'], item['from_date'], item['to_date']
+            print slots
             for d in calendar(start_date, upper_bound):
-                start = (d.weekday() == 0)                                                         
-                if days > 0 and ( start or d >=upper_bound ):
-                    # close the new week
+                days+=1
+                print d, max_effort, days                
+                if d >= item['from_date'] and d <= item['to_date']:
+                    max_effort = max_effort + load * slots[i]              
+                if d.weekday() == 4 or d ==upper_bound:
+                    # close the week
+                    if resolution==week:
+                        max_effort = max_effort / days
                     week_tuple = (days, max_effort)
                     item_weeks.append(week_tuple)
                     print i, d, days, max_effort, item['name']
                     days = 0
-                    max_effort = 0                    
-                if i > len(slots):
-                    break                
-                if resolution==day:
-                    max_effort = max_effort + load * slots[i-1]
-                    i+=1
-                if resolution==week:
-                    max_effort = max_effort + (load * slots[i-1]) / slot_size(resolution)
-                    if days==0:
+                    max_effort = 0       
+                    if resolution==week:
                         i+=1
-                days+=1
+                if resolution==day:
+                    i+=1
+                if i == len(slots):
+                    break                                
  
         result[item['name']] = item_weeks
     print len(slots), len(result['management']), result
@@ -278,7 +282,7 @@ def bounds(tasks, resolution):
         if t.has_key('to') and t['to'] and t['to'] > e:
             e = t['to']
     upper = max(e+timedelta(days=14), date.today()+timedelta(days=90))
-    return s, upper
+    return date.today()+timedelta(days=3), upper
     
 '''
 Generator of a calendar from the given date.
@@ -288,17 +292,20 @@ def calendar(from_date, to_date=date(2100, 01, 01), size=None, resolution=day, w
     s = 0
     if resolution==day:
         while True:
-            while work and d.weekday() == 5 or d.weekday() == 6:
+            while work and d.weekday() > 4:
                 d = d + timedelta(1)
             yield d
             d = d + timedelta(1)
             s+=1
             if (size and s >= size ) or d > to_date:
                 break
-    if resolution==week:                
-        while True:
+    if resolution==week:                        
+        while d.weekday() > 4:
+            d = d + timedelta(days=1) # Jump to Monday
+        while True:            
             yield d
-            d = d - timedelta(days=d.weekday()) # Monday
+            if not d.weekday() == 0:
+                d = d - timedelta(days=d.weekday())
             d = d + timedelta(days=7)            
             s+=1
             if (size and s >= size ) or d > to_date:                
@@ -321,7 +328,8 @@ def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=week):
 
 def prepare_schedule(tasks, resolution=day, work=True):
     tasks = clean_tasks(tasks)
-    start, end, slots, sched = schedule_tasks(tasks, resolution=resolution)        
+    start, end, slots, sched = schedule_tasks(tasks, resolution=resolution)     
+    print start, end , sched   
     if resolution==week:
         slots = dailify(slots, start, end, work, False)
         for s in sched:
@@ -341,13 +349,16 @@ def dailify(list, start, end, work, proportional):
     else:
         week_size = 7
     for d in calendar(start, end, resolution=week):        
-        days= week_size - d.weekday()
+        days= week_size - d.weekday()        
         if proportional:
             ratio = days
         else:
             ratio = week_size
+        print d, days, ratio
         if ratio>0:
-            result.extend([ list[i] / ratio]*days)
+            result.extend([ list[i] / float(ratio)]*days)
+        else:
+            result.extend([ list[i] / week_size]*days)
         i+=1
     return result
         
