@@ -235,36 +235,38 @@ corresponding to each week: (slot_start, nb_days, max_effort).
 '''
 def max_week_effort(items, slots, start_date, end_date, resolution):
     result = {}
-    upper_bound = end_date+timedelta(1)
+    upper_bound = end_date
     for k,item in items.iteritems():
         item_weeks = []
         if item.has_key('load') and item['load'] > 0:        
             load = item['load']
-            i=0
-            days=0
-            max_effort = 0
-            print item['name'], item['from_date'], item['to_date']
-            print slots
-            for d in calendar(start_date, upper_bound):
-                days+=1
-                print d, max_effort, days                
-                if d >= item['from_date'] and d <= item['to_date']:
-                    max_effort = max_effort + load * slots[i]              
-                if d.weekday() == 4 or d ==upper_bound:
-                    # close the week
-                    if resolution==week:
-                        max_effort = max_effort / days
-                    week_tuple = (days, max_effort)
-                    item_weeks.append(week_tuple)
-                    print i, d, days, max_effort, item['name']
-                    days = 0
-                    max_effort = 0       
-                    if resolution==week:
-                        i+=1
-                if resolution==day:
+        else:
+            load = 1.0
+        i=0
+        days=0
+        max_effort = 0
+        print item['name'], item['from_date'], item['to_date']
+        print slots
+        for d in calendar(start_date, upper_bound):
+            days+=1
+            print d, max_effort, days                
+            if d >= item['from_date'] and d <= item['to_date']:
+                max_effort = max_effort + load * slots[i]              
+            if d.weekday() == 4 or d ==upper_bound:
+                # close the week
+                if resolution==week:
+                    max_effort = max_effort / days
+                week_tuple = (days, max_effort)
+                item_weeks.append(week_tuple)
+                print i, d, days, max_effort, item['name']
+                days = 0
+                max_effort = 0       
+                if resolution==week:
                     i+=1
-                if i == len(slots):
-                    break                                
+            if resolution==day:
+                i+=1
+            if i == len(slots):
+                break                                
  
         result[item['name']] = item_weeks
     print len(slots), len(result['management']), result
@@ -281,7 +283,7 @@ def bounds(tasks, resolution):
             s = t['from']
         if t.has_key('to') and t['to'] and t['to'] > e:
             e = t['to']
-    upper = max(e+timedelta(days=14), date.today()+timedelta(days=90))
+    upper = max(e+timedelta(days=14), date.today()+timedelta(days=90)) # TODO: end on a friday when resolution == week !!
     return date.today()+timedelta(days=3), upper
     
 '''
