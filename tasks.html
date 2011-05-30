@@ -41,15 +41,16 @@
         #set $highlight = ''
     #end if
     <td class="title $highlight">
-    #if 'absence' in $t[4] and $t[4]['absence']
-       #set legend = '<i>'+$t[0]+'</i>'
-    #else
-       #set legend = $t[0]
-    #end if
     #if 'url' in $t[4]
-        <a target="_blank" class="$highlight" href="$t[4]['url']?c=1">$legend</a>
+        <a target="_blank" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>
     #else
-        $legend
+        $t[0]
+    #end if
+    #if $t[0] in $collapse
+        <a class="light tiny" href="$url?expand=$t[0]"> &or;</a>
+    #end if
+    #if $t[5] in $expand
+            <a class="light tiny" href="$url?collapse=$t[5]"> &and;</a>
     #end if
     </td><td class="title light">$round($t[2],1)</td>
     #for $i in $t[1]

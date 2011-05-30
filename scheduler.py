@@ -45,6 +45,7 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
     for i in tasks:
         task_dict[i['name']] = i
     process_super_tasks(task_dict)
+    remove_overlap(tasks, lambda t: 'absence' in t and t['absence'] )    
     start_date, end_date, slots, category_items = itemize(tasks, resolution, work)
     s = {}
     w = {}
@@ -296,6 +297,15 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
                 break 
         result[item['name']] = item_weeks
     return result
+
+'''
+Move dates of overlapping tasks. Remove them if necessary.
+'''
+def remove_overlap(tasks, criteria, started_wins=True):
+    l = []
+    for t in tasks:
+        if criteria(t):
+            l.append( (t['from'], t) )
     
 '''
 Change the date of super-tasks according to sub-task dates.
@@ -305,9 +315,8 @@ def process_super_tasks(tasks):
     for name, task in tasks.iteritems():
         sub_tasks = get_sub_tasks(name, names)
         for sub_task in sub_tasks:
-            print sub_task
             if 'to' in tasks[sub_task] and tasks[sub_task]['to'] > task['from']:
-                task['from'] = tasks[sub_task]['to'] + timedelta(days=1)        
+                task['from'] = tasks[sub_task]['to'] + timedelta(days=1)              
     
 sub_task_re = re.compile(r'^(.+)\-[0-9]+$')
 
@@ -386,9 +395,9 @@ def slot_size(resolution, work=True):
 '''
 Renders a schedule
 '''
-def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=week):
+def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=week, collapse=[]):
     dates, slots, sched = prepare_schedule(tasks, resolution)
-    return visualize.render(dates, slots, sched, vars, resolution)
+    return visualize.render(dates, slots, sched, vars, resolution, collapse)
 
 def prepare_schedule(tasks, resolution=day, work=True):
     tasks = clean_tasks(tasks)

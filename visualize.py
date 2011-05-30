@@ -18,6 +18,7 @@
 
 from datetime import date, timedelta
 from Cheetah.Template import Template
+import re
 tasks_template = Template.compile(file=file('tasks.html', "r"))
 
 # constants for resolution and period
@@ -25,22 +26,59 @@ day=0
 week=1
 month=2
 
+grouped_task_re = re.compile(r'^(.*[^ ]) *\[(.+)\]$')
+
 '''
 Renders a schedule as HTML.
 '''
-def render(dates, slots, tasks, vars, resolution=day):
+def render(dates, slots, tasks, vars, resolution=day, collapse=[]):
     slots = round_list(slots)
     ftasks = []
     g, separators = groups(dates, slots)
-    for t in tasks:
-        ftasks.append( (t[0].replace(' ','&nbsp;'), format(round_list(t[1]), separators, round(t[2],3)>round(t[3],3)), t[2], t[3], t[4] ) ) 
+    treated_groups = set()
+    expand = set()
+    for task in tasks:        
+        m = grouped_task_re.match(task[0])
+        t = task
+        group = None
+        if m: 
+            name = m.groups()[0]
+            if m.groups()[0] in collapse:            
+                if name in treated_groups:
+                    continue
+                t = [ name, [0]*len(task[1]), 0, 0, task ]
+                missing = 0
+                for grouped_task in tasks: # merge with from/to dates
+                    m = grouped_task_re.match(grouped_task[0])
+                    if m and m.groups()[0] == name:
+                        t[1] = add_list(t[1], grouped_task[1])
+                        missing = missing + grouped_task[2] - grouped_task[3]
+                t[2] = sum(t[1])+missing
+                t[3] = sum(t[1])
+                treated_groups.add(name)        
+            else:
+                expand.add(name)
+                group=name
+        print t[4]
+        ftasks.append( (t[0].replace(' ','&nbsp;'), format(round_list(t[1]), separators, round(t[2],3)>round(t[3],3)), t[2], t[3], t[4], group ) ) 
     all_vars = { 'dates' : merge(dates, separators_colors(separators)),
          'groups' : g,
          'slots' : format(slots, separators),
-         'tasks' : ftasks
+         'tasks' : ftasks,
+         'collapse' : collapse,
+         'expand' : expand
         }
     all_vars.update(vars)
     return str(tasks_template(searchList=[all_vars]))
+
+'''
+Add items or both lists. Returns the sum and the intersection.
+'''
+def add_list(l1, l2):
+    result = []
+    for i in range(len(l1)):
+        result.append( min(1.0, l1[i] + l2[i]) )
+    return result
 
 '''
 Model for year, month, week headers and week separator.

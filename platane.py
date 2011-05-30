@@ -162,7 +162,15 @@ def get_path(env):
 def show_tasks(path, env):
     tasks = []
     model.traverse( model.parent(path), lambda p : tasks.append(p[1]) )
-    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks', 'url': path+'/', 'refreshable': False }, resolution=week), 'text/html'
+    qs = urlparse.parse_qs(env['QUERY_STRING'])
+    collapse=set()
+    collapse.add('absence')  
+    if 'collapse' in qs:
+        collapse.update(qs['collapse'])
+    if 'expand' in qs:
+        collapse.difference_update(qs['expand'])
+    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks', 'url': path+'/', 'refreshable': False }, 
+        resolution=week, collapse=collapse), 'text/html'
     
 def show_unit_tasks(path, env):
     schedules_by_date = {}
