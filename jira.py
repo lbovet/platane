@@ -6,11 +6,20 @@ from xmlrpclib import Server
 
 jira_scheme = 'https'
 jira_host = 'jira.pnet.ch'
-credentials = json.load(file(os.path.expanduser("~"+getpass.getuser())+'/.platane/jira-credentials'))
+
+credentials_file = os.path.expanduser("~"+getpass.getuser())+'/.platane/jira-credentials'
+try:
+    credentials = json.load(file(credentials_file))
+    enabled = True
+except:
+    print 'Could not load credentials from: '+credentials_file+', Jira support is disabled'
+    enabled = False
 
 useSoap = True
 
 def load_keys(username):
+    if not enabled:
+        return []
     if useSoap:
         from suds.client import Client
         client = Client('http://%s/rpc/soap/jirasoapservice-v2?wsdl'%jira_host)
