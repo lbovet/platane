@@ -10,8 +10,8 @@
 <head>
 #if 'c' in $qs and $qs['c'][0]=='2':
 <script type="text/javascript">
-    window.close()
     window.opener.location.reload()
+    window.close()
 </script>
 #end if
 #if $path.strip() == '/'

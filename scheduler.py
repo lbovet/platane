@@ -1,26 +1,26 @@
-##  Copyright 2011 Laurent Bovet <laurent.bovet@windmaster.ch>
+## Copyright 2011 Laurent Bovet <laurent.bovet@windmaster.ch>
 ##
-##  This file is part of Platane.
+## This file is part of Platane.
 ##
-##  Platane is free software: you can redistribute it and/or modify
-##  it under the terms of the GNU Lesser General Public License as 
-##  published bythe Free Software Foundation, either version 3 of the 
-##  License, or (at your option) any later version.
+## Platane is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as
+## published bythe Free Software Foundation, either version 3 of the
+## License, or (at your option) any later version.
 ##
-##  Platane is distributed in the hope that it will be useful,
-##  but WITHOUT ANY WARRANTY; without even the implied warranty of
-##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-##  GNU Lesser General Public License for more details.
+## Platane is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+## GNU Lesser General Public License for more details.
 ##
-##  You should have received a copy of the GNU Lesser General Public 
-##  License along with Platane. 
-##  If not, see <http://www.gnu.org/licenses/>.
+## You should have received a copy of the GNU Lesser General Public
+## License along with Platane.
+## If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import date, time, timedelta
 import visualize
 import simplex
 from copy import copy
-from pprint import pprint   
+from pprint import pprint
 
 # constants for resolution and period
 day=0
@@ -33,26 +33,26 @@ offset=-1
 Calculate a schedule for the given tasks.
 Returns a result structure: {
 start: <date>,
-slots: [   ],
+slots: [ ],
 schedule : [
-   { task : <taskname>, 
-     slots : [ ] }
+{ task : <taskname>,
+slots : [ ] }
 ]
 '''
 def schedule_tasks(tasks, period=week, resolution=day, work=True):
     task_dict = {}
     for i in tasks:
         task_dict[i['name']] = i
-    start_date, end_date, slots, category_items = itemize(tasks, resolution, work)    
+    start_date, end_date, slots, category_items = itemize(tasks, resolution, work)
     s = {}
     w = {}
-    all_items = {}  # store all generated items for later sorting
+    all_items = {} # store all generated items for later sorting
     base_slots = copy(slots) # slots for calculating discrete load
     for category in sorted(category_items.keys()):
-        items = category_items[category]    
+        items = category_items[category]
         all_items.update(items)
-        sched, week_effort_limit = schedule(items, slots, slot_size(resolution, work), start_date, end_date,  resolution)
-        s.update(sched)    
+        sched, week_effort_limit = schedule(items, slots, slot_size(resolution, work), start_date, end_date, resolution)
+        s.update(sched)
         w.update(week_effort_limit)
         if category < 0:
             base_slots = copy(slots)
@@ -62,9 +62,9 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
     for name in sort_schedule(all_items.values(), s):
         if all_items[name]['effort'] == 0:
             effort = sum([ t[1] for t in w[name] ])
-            result.append( [name, s[name], effort, sum(s[name]), task_dict[name] ]) 
+            result.append( [name, s[name], effort, sum(s[name]), task_dict[name] ])
         else:
-            result.append( [name, s[name], all_items[name]['effort'], sum(s[name]), task_dict[name] ]) 
+            result.append( [name, s[name], all_items[name]['effort'], sum(s[name]), task_dict[name] ])
     return start_date, end_date, slots, result
     
 '''
@@ -82,16 +82,16 @@ def sort_schedule(items, schedule):
                 start = j
             if slots[j] > 0:
                 end = j
-        s.append( ( i['priority'], start, -i['load'], end, i['name'] ) )
+        s.append( ( i['category'], i['priority'], start, -i['load'], end, i['name'] ) )
     s.sort()
-    return [ k[4] for k in s ]
+    return [ k[5] for k in s ]
     
 '''
 Schedule the given items into the slots, updates the slots
 '''
 def schedule(items, slots, size, start_date, end_date, resolution):
     sorted_items = sorted( list(items.values()), key=lambda item: (item['from'], -item['load'], item['to']))
-    week_effort_limit = max_week_effort(items, slots, start_date, end_date, resolution)        
+    week_effort_limit = max_week_effort(items, slots, start_date, end_date, resolution)
     f, A, b, edges = generate_matrix(sorted_items, slots, size, week_effort_limit, resolution)
     optimum = calculate(f, A, b)
     s = {}
@@ -107,22 +107,22 @@ Prepare the Ax <= b matrix and vector. Also provide the corresponding edges (tas
 '''
 def generate_matrix(items, slots, size, week_effort_limit, resolution):
     edges = []
-    A = []    
+    A = []
     b = []
     f = []
     # variable count
     n = 0
-    for item in items:  
+    for item in items:
         c = (item['to']-item['from']) + 1
         n = n + c
         f.extend([2**(-item['priority'])]*c)
     pos = 0
     slot_usage = {}
     # constraints on task effort
-    for item in items:        
+    for item in items:
         line = [0]*n
         wp=pos
-        for i in range(item['from'], item['to']+1):            
+        for i in range(item['from'], item['to']+1):
             edges.append( ( item['name'], i ) )
             if not slot_usage.has_key(i):
                 slot_usage[i] = []
@@ -133,7 +133,7 @@ def generate_matrix(items, slots, size, week_effort_limit, resolution):
             A.append(line)
             b.append(item['effort'])
         #constraint on max week effort
-        if item['name'] in week_effort_limit.keys():            
+        if item['name'] in week_effort_limit.keys():
             week_efforts = week_effort_limit[item['name']]
             d=0
             w=0
@@ -151,16 +151,16 @@ def generate_matrix(items, slots, size, week_effort_limit, resolution):
                         wp+=1
                 if sum(line) > 0:
                     A.append(line)
-                    b.append(week_effort[1])                            
+                    b.append(week_effort[1])
                 w+=1
     # constraints on slot capacity
     for i in sorted( slot_usage.keys() ):
         line = [0]*n
         for p in slot_usage[i]:
             line[p] = 1.0
-        A.append(line)        
-        b.append(slots[i])        
-    return f, A, b, edges    
+        A.append(line)
+        b.append(slots[i])
+    return f, A, b, edges
     
 '''
 Delegate to simplex algorithm to optimize the planning.
@@ -176,10 +176,10 @@ def calculate(f, A, b):
 '''
 Transform the task list in schedulable items and compute slots.
 Returns a schedulable structure: {
-    start_date: <date>,
-    slots: [ ],
-    slot_size
-    items: { <int>, items [ ] }
+start_date: <date>,
+slots: [ ],
+slot_size
+items: { <int>, items [ ] }
 }
 '''
 def itemize(tasks, resolution, work=True):
@@ -192,12 +192,15 @@ def itemize(tasks, resolution, work=True):
     slots = []
     items = {}
     i = 0
-    for d in calendar(start, end, resolution=resolution):        
+    for d in calendar(start, end, resolution=resolution):
         for t in tasks:
             if t.has_key('category'):
                 category = t['category']
             else:
-                category = 0
+                if t.has_key('absence') and t['absence']:
+                    category = -1
+                else:
+                    category = 0                
             if not items.has_key(category):
                 items[category] = {}
             if not items[category].has_key(t['name']):
@@ -206,6 +209,7 @@ def itemize(tasks, resolution, work=True):
             item['name'] = t['name']
             item['from_date'] = t['from']
             item['to_date'] = t['to']
+            item['category'] = category
             if 'priority' in t:
                 item['priority'] = t['priority']
             else:
@@ -219,7 +223,7 @@ def itemize(tasks, resolution, work=True):
             if t['to'] < start:
                 item['to'] = 0
             if t['to'] >= d:
-                item['to'] = i                  
+                item['to'] = i
         i += 1
         if resolution==day:
             slots.append(slot_size(resolution, work))
@@ -230,7 +234,7 @@ def itemize(tasks, resolution, work=True):
 '''
 Calculate maximum effort per week according to load (and super-task in the future).
 
-Returns in a dict per load-based item a list of tuples 
+Returns in a dict per load-based item a list of tuples
 corresponding to each week: (slot_start, nb_days, max_effort).
 '''
 def max_week_effort(items, slots, start_date, end_date, resolution):
@@ -238,7 +242,7 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
     upper_bound = end_date
     for k,item in items.iteritems():
         item_weeks = []
-        if item.has_key('load') and item['load'] > 0:        
+        if item.has_key('load') and item['load'] > 0:
             load = item['load']
         else:
             load = 1.0
@@ -248,7 +252,7 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
         for d in calendar(start_date, upper_bound):
             days+=1
             if d >= item['from_date'] and d <= item['to_date']:
-                max_effort = max_effort + load * slots[i]              
+                max_effort = max_effort + load * slots[i]
             if d.weekday() == 4 or d ==upper_bound:
                 # close the week
                 if resolution==week:
@@ -256,13 +260,13 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
                 week_tuple = (days, max_effort)
                 item_weeks.append(week_tuple)
                 days = 0
-                max_effort = 0       
+                max_effort = 0
                 if resolution==week:
                     i+=1
             if resolution==day:
                 i+=1
             if i == len(slots):
-                break                                
+                break
  
         result[item['name']] = item_weeks
     return result
@@ -277,7 +281,7 @@ def bounds(tasks, resolution):
         if t['from'] < s:
             s = t['from']
         if t.has_key('to') and t['to'] and t['to'] > e:
-            e = t['to']            
+            e = t['to']
     upper = max(e+timedelta(days=14), date.today()+timedelta(days=90))
     if resolution==week:
         upper = upper + timedelta( (4 - upper.weekday()) )
@@ -298,17 +302,17 @@ def calendar(from_date, to_date=date(2100, 01, 01), size=None, resolution=day, w
             s+=1
             if (size and s >= size ) or d > to_date:
                 break
-    if resolution==week:                        
+    if resolution==week:
         while d.weekday() > 4:
             d = d + timedelta(days=1) # Jump to Monday
-        while True:            
+        while True:
             yield d
             if not d.weekday() == 0:
                 d = d - timedelta(days=d.weekday())
-            d = d + timedelta(days=7)            
+            d = d + timedelta(days=7)
             s+=1
-            if (size and s >= size ) or d > to_date:                
-                break            
+            if (size and s >= size ) or d > to_date:
+                break
 '''
 Defines the slot size according to the chosen resolution.
 '''
@@ -327,7 +331,7 @@ def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=week):
 
 def prepare_schedule(tasks, resolution=day, work=True):
     tasks = clean_tasks(tasks)
-    start, end, slots, sched = schedule_tasks(tasks, resolution=resolution)     
+    start, end, slots, sched = schedule_tasks(tasks, resolution=resolution)
     if resolution==week:
         slots = dailify(slots, start, end, work, False)
         for s in sched:
@@ -346,8 +350,8 @@ def dailify(list, start, end, work, proportional):
         week_size = 5
     else:
         week_size = 7
-    for d in calendar(start, end, resolution=week):        
-        days= week_size - d.weekday()        
+    for d in calendar(start, end, resolution=week):
+        days= week_size - d.weekday()
         if proportional:
             ratio = days
         else:
@@ -371,29 +375,24 @@ def clean_tasks(tasks):
         if ('effort' in task and float(task['effort']) > 0) or ( 'load' in task and float(task['load']) > 0):
             good_tasks.append(task)
         if 'effort' in task:
-            try:
-                task['effort'] = float(task['effort'])
-            except:
-                pass
+            task['effort'] = float(task['effort'])
         if 'load' in task:
-            try:
-                task['load'] = float(task['load'])
-                if task['load'] < 0:
-                    task['load'] = None
-                if  task['load'] > 1:
-                    task['load'] = min(1.0, task['load'] / 100.0)
-            except:
-                pass
+            task['load'] = float(task['load'])
+            if task['load'] < 0:
+                task['load'] = None
+            if task['load'] > 1:
+                task['load'] = min(1.0, task['load'] / 100.0)
     return good_tasks
         
 if __name__ == '__main__':
             
-    tasks = [ 
+    tasks = [
         { 'name' : 'absence', 'priority':-1, 'effort': 3, 'from':date(2011, 05, 24), 'to':date(2011, 05, 26) },
-        { 'name' : 'architecture', 'effort': 5, 'from':date(2011, 05, 18), 'to':date(2011, 06, 8) },        
-        { 'name' : 'management', 'load': 0.1, 'from':date(2011, 05, 18), 'to':date(2011, 06, 10) },        
-        { 'name' : 'project1',  'effort': 3.5, 'from':date(2011, 05, 20), 'to':date(2011, 06, 13) },
+        { 'name' : 'architecture', 'effort': 5, 'from':date(2011, 05, 18), 'to':date(2011, 06, 8) },
+        { 'name' : 'management', 'load': 0.1, 'from':date(2011, 05, 18), 'to':date(2011, 06, 10) },
+        { 'name' : 'project1', 'effort': 3.5, 'from':date(2011, 05, 20), 'to':date(2011, 06, 13) },
         { 'name' : 'project2', 'priority': 1, 'effort': 3.5, 'from':date(2011, 05, 23), 'to':date(2011, 06, 13) },
         { 'name' : 'partial time', 'priority': -1, 'load': 0.2, 'from':date(2011, 05, 20), 'to':date(2011, 06, 2) }]
         
     print prepare_schedule(tasks)
+

@@ -15,7 +15,8 @@ root:
                                             from: date
                                             to: date
                                             effort: float
-                                            load: float  
+                                            load: float
+                                            absence: bool
                                 jira:
                                     list: 
                                         attributes: *task

@@ -39,6 +39,13 @@
             #set $cl = 'error' if 'priority' in $errors else 'normal'
             <td>Priority</td><td><input class="$cl" size="4" type="text" name="priority" value="$attributes.priority"> <small class="light">Can be negative</small></input></td>
         </tr>
+        <tr>
+            <td>Absence</td><td><input size="4" type="checkbox" name="absence"
+                #if $attributes.absence
+                    CHECKED
+                #end if
+                ></input></td>
+        </tr>
     </table><br>
     <input type="submit" style="width: 5em" value="Ok"/>
     <input type="submit" style="width: 5em" value="Cancel" onclick="

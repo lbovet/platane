@@ -199,10 +199,10 @@ def parent(path):
     if len(path) > 0:
         return '/'.join(path.split('/')[:-1])
 
-date_formats = ( (re.compile(r'^([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=int(v[1][0]))),
-                 (re.compile(r'^([0-9]?[0-9])\.([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=int(v[1][0]), month=int(v[1][1]))),
-                 (re.compile(r'^([0-9]?[0-9])\.([0-9]?[0-9])\.(20[0-9][0-9])$'), lambda(v) : v[0].replace(day=int(v[1][0]), month=int(v[1][1]), year=int(v[1][2]))),
-                 (re.compile(r'^(20[0-9][0-9])-([0-9]?[0-9])-([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=int(v[1][2]), month=int(v[1][1]), year=int(v[1][0]))) )
+date_formats = ( (re.compile(r'^([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=int(v[1][0])), 1),
+                 (re.compile(r'^([0-9]?[0-9])\.([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=int(v[1][0]), month=int(v[1][1])), 2),
+                 (re.compile(r'^([0-9]?[0-9])\.([0-9]?[0-9])\.(20[0-9][0-9])$'), lambda(v) : v[0].replace(day=int(v[1][0]), month=int(v[1][1]), year=int(v[1][2])), 0),
+                 (re.compile(r'^(20[0-9][0-9])-([0-9]?[0-9])-([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=int(v[1][2]), month=int(v[1][1]), year=int(v[1][0]))), 0 )
 
 def traverse(path, function):
     d = describe(path)
@@ -217,14 +217,24 @@ def traverse(path, function):
             traverse(path+"/"+child, function)
 
 def check_date(d):
+    today = datetime.date.today()
     if isinstance(d, basestring):
         if d.strip() == '':
             return None
         r = datetime.date.today()
         for f in date_formats:
             m = f[0].match(d)
-            if m:
-                return f[1]( (r, m.groups()) )
+            if m:                
+                new = f[1]( (r, m.groups()) )
+                # jump to next month
+                if f[2]==1 and new < today:
+                    while new < today and new.month<12:
+                        new = new.replace(new.year, new.month+1, new.day)
+                # jump to next year
+                if f[2]>1 and new < today:
+                    while new < today:
+                        new = new.replace(new.year+1, new.month, new.day)
+                return new
         raise Exception()
     return d
     
@@ -237,7 +247,8 @@ def check_string(s):
 types = { 'int': [0, int],
              'date': [ None, check_date],
              'str': [ "", check_string ],
-             'float': [ 0.0, float ] }
+             'float': [ 0.0, float ],
+             'bool': [ False, bool ] }
 
 class ParseException(Exception):
     def __init__(self, attributes, errors):
