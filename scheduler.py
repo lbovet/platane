@@ -45,7 +45,9 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
     for i in tasks:
         task_dict[i['name']] = i
     process_super_tasks(task_dict)
-    remove_overlap(tasks, lambda t: 'absence' in t and t['absence'] )    
+    remove_overlap(task_dict, lambda t: 'absence' in t and t['absence'] )
+    process_groups(task_dict)
+    tasks = task_dict.values()    
     start_date, end_date, slots, category_items = itemize(tasks, resolution, work)
     s = {}
     w = {}
@@ -99,9 +101,9 @@ def sort_schedule(items, schedule):
                 start = j
             if slots[j] > 0:
                 end = j
-        s.append( ( i['category'], i['priority'], start, -i['load'], end, i['name'] ) )
+        s.append( ( i['category'], i['name'].split('[')[0] if '[' in i['name'] else 'zzz', i['priority'], start, -i['load'], end, i['name'] ) )
     s.sort()
-    return [ k[5] for k in s ]
+    return [ k[6] for k in s ]
     
 '''
 Schedule the given items into the slots, updates the slots
@@ -278,7 +280,7 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
         for d in calendar(start_date, upper_bound):
             days+=1
             if d >= item['from_date'] and d <= item['to_date']:                
-                if super_task_name:
+                if super_task_name and 'load' in items[super_task_name]['load']:
                     load = min(load, items[super_task_name]['load'])
                 max_effort = max_effort + load * slots[i]                
             if d.weekday() == 4 or d ==upper_bound:
@@ -301,12 +303,36 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
 '''
 Move dates of overlapping tasks. Remove them if necessary.
 '''
-def remove_overlap(tasks, criteria, started_wins=True):
+def remove_overlap(task_dict, criteria, started_wins=True):
     l = []
-    for t in tasks:
+    for t in task_dict.values():
         if criteria(t):
             l.append( (t['from'], t) )
-    
+    new_end = date(2100, 01, 01)
+    previous = None
+    to_delete=set()
+    for t in sorted(l):
+        if previous:
+            if not 'to' in previous or previous['to'] >= t[1]['from']:
+                if started_wins:    
+                    if not 'to' in previous or ('to' in t[1] and t[1]['to'] <= previous['to']):
+                        to_delete.add(t[1]['name'])
+                    if 'to' in previous:
+                        t[1]['from'] = previous['to']+timedelta(days=1)                    
+                else:
+                    previous['to'] = t[1]['from']-timedelta(days=1)
+                    if previous['to'] < previous['from']:
+                        to_delete.add(previous['name'])
+        previous = t[1]
+    for t in to_delete:
+        del task_dict[t]        
+
+'''
+Make grouped task disjoint
+'''
+def process_groups(task_dict):
+    pass
+
 '''
 Change the date of super-tasks according to sub-task dates.
 '''
@@ -327,7 +353,7 @@ def get_super_task(sub_task_name, task_names):
     m = sub_task_re.match(sub_task_name)
     if m:
         super_task_name = m.groups()[0]
-        if super_task_name:
+        if super_task_name in task_names:
             return super_task_name
     
 '''
@@ -395,9 +421,9 @@ def slot_size(resolution, work=True):
 '''
 Renders a schedule
 '''
-def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=week, collapse=[]):
+def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=week, expand=[]):
     dates, slots, sched = prepare_schedule(tasks, resolution)
-    return visualize.render(dates, slots, sched, vars, resolution, collapse)
+    return visualize.render(dates, slots, sched, vars, resolution, expand)
 
 def prepare_schedule(tasks, resolution=day, work=True):
     tasks = clean_tasks(tasks)

@@ -33,6 +33,7 @@
         <td class="slot total" style="border-left-color: $i[1];" bgcolor="$i[0][1]"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i[0][0]*100))%</span></a></td>
     #end for
 </tr>
+#set previous=None
 #for $t in $tasks
 <tr>
     #if (round($t[3],3) != round($t[2],3))
@@ -41,16 +42,22 @@
         #set $highlight = ''
     #end if
     <td class="title $highlight">
-    #if 'url' in $t[4]
-        <a target="_blank" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>
-    #else
-        $t[0]
-    #end if
+    #set arrow=''
     #if $t[0] in $collapse
-        <a class="light tiny" href="$url?expand=$t[0]"> &or;</a>
+        #set arrow='&nbsp;<a class="mono light tiny" href="'+$url+'?x='+$t[0]+'">&or;</a>'
     #end if
     #if $t[5] in $expand
-            <a class="light tiny" href="$url?collapse=$t[5]"> &and;</a>
+        #if not $t[5]==previous
+            #set arrow='&nbsp;<a class="mono light tiny" href="'+$url+'">&and;</a>'
+        #else
+            #set arrow='<span>&nbsp;&nbsp;</span>'
+        #end if
+    #end if    
+    #set previous = $t[5]
+    #if 'url' in $t[4]
+        <a target="_blank" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>$arrow
+    #else
+        $t[0]$arrow
     #end if
     </td><td class="title light">$round($t[2],1)</td>
     #for $i in $t[1]

@@ -274,6 +274,13 @@ def check_attributes(attr_dict, attr_schema, fix=False):
     if not fix and len(errors)>0:
         raise ParseException(original_attributes, errors)
 
+def check(path, m):
+    d = describe(path)
+    if d:
+        return check_attributes(m, d['attributes'])
+    else:
+        raise NotFoundException('Invalid path: '+path)
+
 def as_dict(element):
     if element.has_key('dict'):
         return element['dict']

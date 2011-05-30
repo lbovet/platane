@@ -31,19 +31,19 @@ grouped_task_re = re.compile(r'^(.*[^ ]) *\[(.+)\]$')
 '''
 Renders a schedule as HTML.
 '''
-def render(dates, slots, tasks, vars, resolution=day, collapse=[]):
+def render(dates, slots, tasks, vars, resolution=day, expand=[]):
     slots = round_list(slots)
     ftasks = []
     g, separators = groups(dates, slots)
     treated_groups = set()
-    expand = set()
+    collapse = set()
     for task in tasks:        
         m = grouped_task_re.match(task[0])
         t = task
         group = None
         if m: 
             name = m.groups()[0]
-            if m.groups()[0] in collapse:            
+            if m.groups()[0] not in expand:            
                 if name in treated_groups:
                     continue
                 t = [ name, [0]*len(task[1]), 0, 0, task ]
@@ -55,7 +55,8 @@ def render(dates, slots, tasks, vars, resolution=day, collapse=[]):
                         missing = missing + grouped_task[2] - grouped_task[3]
                 t[2] = sum(t[1])+missing
                 t[3] = sum(t[1])
-                treated_groups.add(name)        
+                treated_groups.add(name)
+                collapse.add(name)        
             else:
                 expand.add(name)
                 group=name

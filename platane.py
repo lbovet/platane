@@ -23,6 +23,7 @@ import urlparse
 import urllib
 import datetime
 import optparse
+import copy
 import scheduler
 import visualize
 import jira
@@ -48,9 +49,7 @@ def get_body(path, d, m, env):
     if parent:
         parent_type = model.describe(parent)['type']
     if 'cache' in d:
-        print 'CACHED'        
         if 'r' in qs and qs['r'][0]=='1':
-            print 'INVALIDATING'
             model.invalid_cache(model.normalize(path))
         refreshable = True
     vars = { 'context': '/', 'path':path, 'parent_type': parent_type, 'qs': qs, 'refreshable': refreshable, 'url' : path+"/"}
@@ -92,7 +91,16 @@ def get_data(env):
 
 def save_body(path, d, m, env):
     if d['type'] == 'leaf':
-        model.create(path)
+        original=copy.copy(m)
+        model.check(path, m)
+        errors = []
+        if m['to'] and m['from'] and m['to'] < m['from']:
+            errors.extend( ('to','from') )
+        if original['load'] == '' and original['effort'] == '':
+            errors.extend( ('load', 'effort') )
+        if len(errors) > 0:
+            raise model.ParseException(original, errors)
+        model.create(path)        
         model.save(path, m)
         return "\n", model.parent(path)
     if d['type'] == 'list' and 'name' in m:
@@ -163,14 +171,11 @@ def show_tasks(path, env):
     tasks = []
     model.traverse( model.parent(path), lambda p : tasks.append(p[1]) )
     qs = urlparse.parse_qs(env['QUERY_STRING'])
-    collapse=set()
-    collapse.add('absence')  
-    if 'collapse' in qs:
-        collapse.update(qs['collapse'])
-    if 'expand' in qs:
-        collapse.difference_update(qs['expand'])
+    expand=set()
+    if 'x' in qs:
+        expand.update(qs['x'])
     return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks', 'url': path+'/', 'refreshable': False }, 
-        resolution=week, collapse=collapse), 'text/html'
+        resolution=week, expand=expand), 'text/html'
     
 def show_unit_tasks(path, env):
     schedules_by_date = {}
