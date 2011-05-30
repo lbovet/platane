@@ -19,6 +19,7 @@
 from datetime import date, time, timedelta
 import visualize
 import simplex
+import re
 from copy import copy
 from pprint import pprint
 
@@ -43,19 +44,24 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
     task_dict = {}
     for i in tasks:
         task_dict[i['name']] = i
+    process_super_tasks(task_dict)
     start_date, end_date, slots, category_items = itemize(tasks, resolution, work)
     s = {}
     w = {}
     all_items = {} # store all generated items for later sorting
     base_slots = copy(slots) # slots for calculating discrete load
+    updated_slots = copy(slots)
     for category in sorted(category_items.keys()):
         items = category_items[category]
         all_items.update(items)
-        sched, week_effort_limit = schedule(items, slots, slot_size(resolution, work), start_date, end_date, resolution)
+        if category < 0:
+            actual_slots = base_slots
+        else:
+            actual_slots = updated_slots
+        sched, week_effort_limit = schedule(items, actual_slots, slot_size(resolution, work), start_date, end_date, resolution) 
+        updated_slots = actual_slots
         s.update(sched)
         w.update(week_effort_limit)
-        if category < 0:
-            base_slots = copy(slots)
     result = []
     # sort the items and calculate target effort for load-based tasks
     split_treated = set()
@@ -65,7 +71,17 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
             result.append( [name, s[name], effort, sum(s[name]), task_dict[name] ])
         else:
             result.append( [name, s[name], all_items[name]['effort'], sum(s[name]), task_dict[name] ])
-    return start_date, end_date, slots, result
+    return start_date, end_date, updated_slots, result
+    
+    
+'''
+Merge slots by taking the minimum of each
+'''
+def merge_slots(slots, updated_slots):
+    result = []
+    for i in range(len(slots)):
+        result.append(min(slots[i], updated_slots[i]))
+    return result
     
 '''
 Sort the items in order of appearance. Returns the name list.
@@ -191,39 +207,46 @@ def itemize(tasks, resolution, work=True):
                 end = end + timedelta(t['effort'])
     slots = []
     items = {}
+    treated = {}
     i = 0
+    c = -100
     for d in calendar(start, end, resolution=resolution):
         for t in tasks:
             if t.has_key('category'):
                 category = t['category']
             else:
                 if t.has_key('absence') and t['absence']:
-                    category = -1
+                    category = c
                 else:
                     category = 0                
-            if not items.has_key(category):
-                items[category] = {}
-            if not items[category].has_key(t['name']):
+            if not t['name'] in treated.keys():
+                if category < 0:                
+                    c=c+1            
+                if not items.has_key(category):
+                    items[category] = {}            
                 items[category][t['name']] = {}
-            item = items[category][t['name']]
-            item['name'] = t['name']
-            item['from_date'] = t['from']
-            item['to_date'] = t['to']
-            item['category'] = category
-            if 'priority' in t:
-                item['priority'] = t['priority']
-            else:
-                item['priority'] = 0
-            if t.has_key('effort'):
-                item['effort'] = t['effort']
-            if t.has_key('load'):
-                item['load'] = t['load']
-            if i==0 or t['from'] >= d:
-                item['from'] = i
-            if t['to'] < start:
-                item['to'] = 0
-            if t['to'] >= d:
-                item['to'] = i
+                treated[t['name']] = category
+            category = treated[t['name']]
+            if category in items and t['name'] in items[category].keys():
+                item = items[category][t['name']]
+                item['name'] = t['name']
+                item['from_date'] = t['from']
+                item['to_date'] = t['to']
+                item['category'] = category
+                if 'priority' in t:
+                    item['priority'] = t['priority']
+                else:
+                    item['priority'] = 0
+                if t.has_key('effort'):
+                    item['effort'] = t['effort']
+                if t.has_key('load'):
+                    item['load'] = t['load']
+                if i==0 or t['from'] >= d:
+                    item['from'] = i
+                if t['to'] < start:
+                    item['to'] = 0
+                if t['to'] >= d:
+                    item['to'] = i
         i += 1
         if resolution==day:
             slots.append(slot_size(resolution, work))
@@ -232,7 +255,7 @@ def itemize(tasks, resolution, work=True):
     return start, end, slots, items
 
 '''
-Calculate maximum effort per week according to load (and super-task in the future).
+Calculate maximum effort per week according to load and super-task in the future.
 
 Returns in a dict per load-based item a list of tuples
 corresponding to each week: (slot_start, nb_days, max_effort).
@@ -240,7 +263,8 @@ corresponding to each week: (slot_start, nb_days, max_effort).
 def max_week_effort(items, slots, start_date, end_date, resolution):
     result = {}
     upper_bound = end_date
-    for k,item in items.iteritems():
+    for name in sorted(items.keys()):
+        item = items[name]
         item_weeks = []
         if item.has_key('load') and item['load'] > 0:
             load = item['load']
@@ -249,10 +273,13 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
         i=0
         days=0
         max_effort = 0
+        super_task_name = get_super_task(name, items.keys())
         for d in calendar(start_date, upper_bound):
             days+=1
-            if d >= item['from_date'] and d <= item['to_date']:
-                max_effort = max_effort + load * slots[i]
+            if d >= item['from_date'] and d <= item['to_date']:                
+                if super_task_name:
+                    load = min(load, items[super_task_name]['load'])
+                max_effort = max_effort + load * slots[i]                
             if d.weekday() == 4 or d ==upper_bound:
                 # close the week
                 if resolution==week:
@@ -266,9 +293,43 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
             if resolution==day:
                 i+=1
             if i == len(slots):
-                break
- 
+                break 
         result[item['name']] = item_weeks
+    return result
+    
+'''
+Change the date of super-tasks according to sub-task dates.
+'''
+def process_super_tasks(tasks):
+    names = tasks.keys()
+    for name, task in tasks.iteritems():
+        sub_tasks = get_sub_tasks(name, names)
+        for sub_task in sub_tasks:
+            print sub_task
+            if 'to' in tasks[sub_task] and tasks[sub_task]['to'] > task['from']:
+                task['from'] = tasks[sub_task]['to'] + timedelta(days=1)        
+    
+sub_task_re = re.compile(r'^(.+)\-[0-9]+$')
+
+'''
+Return the super task name of a sub task if it has one. None otherwise.
+'''
+def get_super_task(sub_task_name, task_names):
+    m = sub_task_re.match(sub_task_name)
+    if m:
+        super_task_name = m.groups()[0]
+        if super_task_name:
+            return super_task_name
+    
+'''
+Return all subtasks of a task
+'''
+def get_sub_tasks(super_task_name, task_names):
+    result=[]
+    for t in task_names:        
+        m = sub_task_re.match(t)
+        if m and m.groups()[0] == super_task_name:
+            result.append(t)
     return result
     
 '''
@@ -356,7 +417,6 @@ def dailify(list, start, end, work, proportional):
             ratio = days
         else:
             ratio = week_size
-        print d, days, ratio
         if ratio>0:
             result.extend([ list[i] / float(ratio)]*days)
         else:
