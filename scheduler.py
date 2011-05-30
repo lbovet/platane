@@ -27,6 +27,8 @@ day=0
 week=1
 month=2
 
+offset=-1
+
 '''
 Calculate a schedule for the given tasks.
 Returns a result structure: {
@@ -60,11 +62,9 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
     for name in sort_schedule(all_items.values(), s):
         if all_items[name]['effort'] == 0:
             effort = sum([ t[1] for t in w[name] ])
-            print name, sum(s[name]), effort
             result.append( [name, s[name], effort, sum(s[name]), task_dict[name] ]) 
         else:
             result.append( [name, s[name], all_items[name]['effort'], sum(s[name]), task_dict[name] ]) 
-    print end_date, slots
     return start_date, end_date, slots, result
     
 '''
@@ -245,11 +245,8 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
         i=0
         days=0
         max_effort = 0
-        print item['name'], item['from_date'], item['to_date']
-        print slots
         for d in calendar(start_date, upper_bound):
             days+=1
-            print d, max_effort, days                
             if d >= item['from_date'] and d <= item['to_date']:
                 max_effort = max_effort + load * slots[i]              
             if d.weekday() == 4 or d ==upper_bound:
@@ -258,7 +255,6 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
                     max_effort = max_effort / days
                 week_tuple = (days, max_effort)
                 item_weeks.append(week_tuple)
-                print i, d, days, max_effort, item['name']
                 days = 0
                 max_effort = 0       
                 if resolution==week:
@@ -269,7 +265,6 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
                 break                                
  
         result[item['name']] = item_weeks
-    print len(slots), len(result['management']), result
     return result
     
 '''
@@ -282,9 +277,11 @@ def bounds(tasks, resolution):
         if t['from'] < s:
             s = t['from']
         if t.has_key('to') and t['to'] and t['to'] > e:
-            e = t['to']
-    upper = max(e+timedelta(days=14), date.today()+timedelta(days=90)) # TODO: end on a friday when resolution == week !!
-    return date.today()+timedelta(days=3), upper
+            e = t['to']            
+    upper = max(e+timedelta(days=14), date.today()+timedelta(days=90))
+    if resolution==week:
+        upper = upper + timedelta( (4 - upper.weekday()) )
+    return date.today()+timedelta(days=offset), upper
     
 '''
 Generator of a calendar from the given date.
@@ -331,7 +328,6 @@ def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=week):
 def prepare_schedule(tasks, resolution=day, work=True):
     tasks = clean_tasks(tasks)
     start, end, slots, sched = schedule_tasks(tasks, resolution=resolution)     
-    print start, end , sched   
     if resolution==week:
         slots = dailify(slots, start, end, work, False)
         for s in sched:
