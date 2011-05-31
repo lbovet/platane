@@ -136,7 +136,7 @@ def load(path):
             result['url'] = path+"/"
         if 'cache' in d:
             print "Caching "+path
-            put_cache(path, result)
+            put_cache(path, copy.copy(result))
         return result
     else:
         raise NotFoundException('Invalid path: '+path)
