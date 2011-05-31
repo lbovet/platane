@@ -101,7 +101,7 @@ def sort_schedule(items, schedule):
                 start = j
             if slots[j] > 0:
                 end = j
-        s.append( ( i['category'], i['name'].split('[')[0] if '[' in i['name'] else 'zzz', i['priority'], start, -i['load'], end, i['name'] ) )
+        s.append( ( i['category'], i['name'].split('[')[0] if '[' in i['name'] or i['supertask'] or i['subtask'] else 'zzz', i['priority'], start, -i['load'], end, i['name'] ) )
     s.sort()
     return [ k[6] for k in s ]
     
@@ -236,6 +236,8 @@ def itemize(tasks, resolution, work=True):
                 item['from_date'] = t['from']
                 item['to_date'] = t['to']
                 item['category'] = category
+                item['supertask'] = t['supertask']
+                item['subtask'] = t['subtask']
                 if 'priority' in t:
                     item['priority'] = t['priority']
                 else:
@@ -280,7 +282,7 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
         for d in calendar(start_date, upper_bound):
             days+=1
             if d >= item['from_date'] and d <= item['to_date']:                
-                if super_task_name and 'load' in items[super_task_name]['load']:
+                if super_task_name and 'load' in items[super_task_name]:
                     load = min(load, items[super_task_name]['load'])
                 max_effort = max_effort + load * slots[i]                
             if d.weekday() == 4 or d ==upper_bound:
@@ -338,12 +340,24 @@ Change the date of super-tasks according to sub-task dates.
 '''
 def process_super_tasks(tasks):
     names = tasks.keys()
+    for task in tasks.values():
+        task['supertask']=True
+        task['subtask']=True
     for name, task in tasks.iteritems():
         sub_tasks = get_sub_tasks(name, names)
-        for sub_task in sub_tasks:
-            if 'to' in tasks[sub_task] and tasks[sub_task]['to'] > task['from']:
-                task['from'] = tasks[sub_task]['to'] + timedelta(days=1)              
-    
+        if len(sub_tasks) > 0:
+            task['supertask']=True
+            last = task['from']-timedelta(days=1)
+            for sub_task in sub_tasks:
+                tasks[sub_task]['subtask'] = True
+                if 'to' in tasks[sub_task] and tasks[sub_task]['to']:
+                    if tasks[sub_task]['to'] > last:
+                        last = tasks[sub_task]['to']
+            if last >= task['from']:
+                task['from'] = last + timedelta(days=1)
+            else:
+                task['to'] = task['from']-timedelta(days=1)
+        
 sub_task_re = re.compile(r'^(.+)\-[0-9]+$')
 
 '''
