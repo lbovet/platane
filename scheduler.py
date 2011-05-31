@@ -28,7 +28,7 @@ day=0
 week=1
 month=2
 
-offset=-1
+offset=0
 
 '''
 Calculate a schedule for the given tasks.
@@ -300,6 +300,7 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
             if i == len(slots):
                 break 
         result[item['name']] = item_weeks
+    print result
     return result
 
 '''
@@ -317,7 +318,7 @@ def remove_overlap(task_dict, criteria, started_wins=True):
         if previous:
             if not 'to' in previous or previous['to'] >= t[1]['from']:
                 if started_wins:    
-                    if not 'to' in previous or ('to' in t[1] and t[1]['to'] <= previous['to']):
+                    if not 'to' in previous or ('to' in t[1] and t[1]['to'] and t[1]['to'] <= previous['to']):
                         to_delete.add(t[1]['name'])
                     if 'to' in previous:
                         t[1]['from'] = previous['to']+timedelta(days=1)                    
@@ -329,11 +330,19 @@ def remove_overlap(task_dict, criteria, started_wins=True):
     for t in to_delete:
         del task_dict[t]        
 
+grouped_task_re = re.compile(r'^(.*[^ ]) *\[(.+)\]$')
+
 '''
 Make grouped task disjoint
 '''
 def process_groups(task_dict):
-    pass
+    groups = set()
+    for name in task_dict.keys():
+        m = grouped_task_re.match(name)
+        if m:
+            groups.add(m.groups()[0])
+    for g in groups:
+        remove_overlap(task_dict, lambda t: t['name'].split('[')[0].strip()==g)
 
 '''
 Change the date of super-tasks according to sub-task dates.
