@@ -165,6 +165,10 @@ Delete a path.
 def delete(path):
     path = normalize(path)
     d = describe(path)
+    if d and d['type'] == 'list':
+        for i in load(path):
+            delete(path+"/"+i)
+        return
     if d and describe(parent(path))['type'] == 'list':
         if 'handlers' in d:
             if 'delete' in d['handlers']:

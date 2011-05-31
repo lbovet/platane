@@ -118,7 +118,7 @@ def do_delete(env, start_response):
 
 def delete_body(path, d, m, env):
     parent = model.parent(path)
-    if parent and model.describe(parent)['type'] == 'list':
+    if parent:
         model.delete(path)
         return "\n", parent
     else:

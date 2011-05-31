@@ -7,25 +7,34 @@ root:
                         list:
                             dict:
                                 tasks:
-                                    list: 
-                                        attributes: &task
-                                            name: str
-                                            description: str
-                                            priority: int
-                                            from: date
-                                            to: date
-                                            effort: float
-                                            load: float
-                                            absence: bool
-                                jira:
-                                    list: 
-                                        attributes: *task
-                                        cache: true
-                                        handlers: 
-                                            load: jira_load_task
-                                    handlers: 
-                                        load: jira_load_list
-                                    cache: true
+                                    dict:
+                                        plan:
+                                            list: 
+                                                attributes: &task
+                                                    name: str
+                                                    description: str
+                                                    priority: int
+                                                    from: date
+                                                    to: date
+                                                    effort: float
+                                                    load: float
+                                                    absence: bool
+                                        outlook:
+                                            readonly: true
+                                            list:
+                                                attributes: *task
+                                                readonly: true 
+                                        jira:
+                                            readonly: true
+                                            list:
+                                                readonly: true
+                                                attributes: *task
+                                                cache: true
+                                                handlers: 
+                                                    load: jira_load_task
+                                            handlers: 
+                                                load: jira_load_list
+                                            cache: true
                                 planning:
                                     render:
                                         function: show_tasks                                                                                    
