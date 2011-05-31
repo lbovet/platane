@@ -328,10 +328,12 @@ def remove_overlap(task_dict, criteria, started_wins=True):
     to_delete=set()
     for t in sorted(l):
         if previous:
-            if not 'to' in previous or previous['to'] >= t[1]['from']:
+            print t[1], previous
+            if not 'to' in previous or not previous['to'] or previous['to'] >= t[1]['from']:
                 if started_wins:    
-                    if not 'to' in previous or ('to' in t[1] and t[1]['to'] and t[1]['to'] <= previous['to']):
+                    if not 'to' in previous or not previous['to'] or ('to' in t[1] and t[1]['to'] and t[1]['to'] <= previous['to']):
                         to_delete.add(t[1]['name'])
+                        continue
                     if 'to' in previous:
                         t[1]['from'] = previous['to']+timedelta(days=1)                    
                 else:

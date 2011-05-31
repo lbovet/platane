@@ -174,7 +174,7 @@ def show_tasks(path, env):
     expand=set()
     if 'x' in qs:
         expand.update(qs['x'])
-    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks', 'url': path+'/', 'refreshable': False }, 
+    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks/plan/', 'url': path+'/', 'refreshable': False }, 
         resolution=week, expand=expand), 'text/html'
     
 def show_unit_tasks(path, env):
