@@ -20,7 +20,7 @@ from datetime import date, time, timedelta
 import visualize
 import simplex
 import re
-from copy import copy
+from copy import copy, deepcopy
 from pprint import pprint
 
 # constants for resolution and period
@@ -44,6 +44,7 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
     task_dict = {}
     for i in tasks:
         task_dict[i['name']] = i
+    original_task_dict = deepcopy(task_dict)
     process_super_tasks(task_dict)
     remove_overlap(task_dict, lambda t: 'absence' in t and t['absence'] )
     process_groups(task_dict)
@@ -61,7 +62,7 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
             actual_slots = base_slots
         else:
             actual_slots = updated_slots
-        sched, week_effort_limit = schedule(items, actual_slots, slot_size(resolution, work), start_date, end_date, resolution) 
+        sched, week_effort_limit = schedule(items, original_task_dict, actual_slots, slot_size(resolution, work), start_date, end_date, resolution) 
         updated_slots = actual_slots
         s.update(sched)
         w.update(week_effort_limit)
@@ -101,16 +102,16 @@ def sort_schedule(items, schedule):
                 start = j
             if slots[j] > 0:
                 end = j
-        s.append( ( i['category'], i['name'].split('[')[0] if '[' in i['name'] or i['supertask'] or i['subtask'] else 'zzz', i['priority'], start, -i['load'], end, i['name'] ) )
+        s.append( ( i['category'], i['name'] if '[' in i['name'] or i['supertask'] or i['subtask'] else 'zzz', i['priority'], start, -i['load'], end, i['name'] ) )
     s.sort()
     return [ k[6] for k in s ]
     
 '''
 Schedule the given items into the slots, updates the slots
 '''
-def schedule(items, slots, size, start_date, end_date, resolution):
+def schedule(items, tasks, slots, size, start_date, end_date, resolution):
     sorted_items = sorted( list(items.values()), key=lambda item: (item['from'], -item['load'], item['to']))
-    week_effort_limit = max_week_effort(items, slots, start_date, end_date, resolution)
+    week_effort_limit = max_week_effort(items, tasks, slots, start_date, end_date, resolution)
     f, A, b, edges = generate_matrix(sorted_items, slots, size, week_effort_limit, resolution)
     optimum = calculate(f, A, b)
     s = {}
@@ -265,7 +266,7 @@ Calculate maximum effort per week according to load and super-task in the future
 Returns in a dict per load-based item a list of tuples
 corresponding to each week: (slot_start, nb_days, max_effort).
 '''
-def max_week_effort(items, slots, start_date, end_date, resolution):
+def max_week_effort(items, tasks, slots, start_date, end_date, resolution):
     result = {}
     upper_bound = end_date
     for name in sorted(items.keys()):
@@ -282,9 +283,12 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
         for d in calendar(start_date, upper_bound):
             days+=1
             if d >= item['from_date'] and d <= item['to_date']:                
-                if super_task_name and 'load' in items[super_task_name]:
-                    load = min(load, items[super_task_name]['load'])
-                max_effort = max_effort + load * slots[i]                
+                new_load=load
+                if super_task_name:
+                    super_task = get_super_task_for_day(super_task_name, d, tasks)
+                    if super_task and 'load' in super_task:
+                        new_load = min(load, super_task['load'])
+                max_effort = max_effort + new_load * slots[i]                
             if d.weekday() == 4 or d ==upper_bound:
                 # close the week
                 if resolution==week:
@@ -300,8 +304,17 @@ def max_week_effort(items, slots, start_date, end_date, resolution):
             if i == len(slots):
                 break 
         result[item['name']] = item_weeks
-    print result
     return result
+
+'''
+Return the super task for the given day (may differ in case the super task is a group).
+'''
+def get_super_task_for_day(super_task_name, d, tasks):
+    for name, task in tasks.iteritems():
+        if name.startswith(super_task_name) and name.split('[')[0].strip()==super_task_name:
+            if task['from'] <= d and ('to' not in task or not task['to'] or task['to'] >= d):
+                print super_task_name, d
+                return task   
 
 '''
 Move dates of overlapping tasks. Remove them if necessary.
@@ -350,9 +363,12 @@ Change the date of super-tasks according to sub-task dates.
 def process_super_tasks(tasks):
     names = tasks.keys()
     for task in tasks.values():
-        task['supertask']=True
-        task['subtask']=True
+        task['supertask']=False
+        task['subtask']=False
     for name, task in tasks.iteritems():
+        m = grouped_task_re.match(name)
+        if m:
+            name = m.groups()[0]
         sub_tasks = get_sub_tasks(name, names)
         if len(sub_tasks) > 0:
             task['supertask']=True
@@ -376,8 +392,9 @@ def get_super_task(sub_task_name, task_names):
     m = sub_task_re.match(sub_task_name)
     if m:
         super_task_name = m.groups()[0]
-        if super_task_name in task_names:
-            return super_task_name
+        for i in task_names:
+            if i.split('[')[0].strip() == super_task_name:
+                return super_task_name
     
 '''
 Return all subtasks of a task

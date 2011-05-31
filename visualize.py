@@ -60,7 +60,6 @@ def render(dates, slots, tasks, vars, resolution=day, expand=[]):
             else:
                 expand.add(name)
                 group=name
-        print t[4]
         ftasks.append( (t[0].replace(' ','&nbsp;'), format(round_list(t[1]), separators, round(t[2],3)>round(t[3],3)), t[2], t[3], t[4], group ) ) 
     all_vars = { 'dates' : merge(dates, separators_colors(separators)),
          'groups' : g,

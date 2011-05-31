@@ -56,12 +56,17 @@
         #end if
     #end if
     #set previous = $t[5]
+    #set supertask = ('supertask' in $t[4] and $t[4]['supertask'])
     #if 'url' in $t[4]
         <a target="_blank" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>$arrow
     #else
         $before$t[0]$arrow
     #end if
-    </td><td class="title light">$round($t[2],1)</td>
+    </td><td class="title light">
+    #if $t[2] > 0
+        $round($t[2],1)
+    #end if
+    </td>
     #for $i in $t[1]
         <td class="slot" style="border-left-color: $i[1];" bgcolor="$i[0][1]">
             #if ($i[0][0] > 0.0)
