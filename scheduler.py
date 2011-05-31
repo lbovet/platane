@@ -204,6 +204,7 @@ items: { <int>, items [ ] }
 '''
 def itemize(tasks, resolution, work=True):
     start, end = bounds(tasks, resolution)
+    print tasks
     for t in tasks:
         if not t.has_key('to') or not t['to']:
             t['to'] = end
@@ -269,6 +270,7 @@ corresponding to each week: (slot_start, nb_days, max_effort).
 def max_week_effort(items, tasks, slots, start_date, end_date, resolution):
     result = {}
     upper_bound = end_date
+    print slots
     for name in sorted(items.keys()):
         item = items[name]
         item_weeks = []
@@ -304,6 +306,7 @@ def max_week_effort(items, tasks, slots, start_date, end_date, resolution):
             if i == len(slots):
                 break 
         result[item['name']] = item_weeks
+    print result
     return result
 
 '''
@@ -313,7 +316,7 @@ def get_super_task_for_day(super_task_name, d, tasks):
     for name, task in tasks.iteritems():
         if name.startswith(super_task_name) and name.split('[')[0].strip()==super_task_name:
             if task['from'] <= d and ('to' not in task or not task['to'] or task['to'] >= d):
-                print super_task_name, d
+                print super_task_name, d, task['load']
                 return task   
 
 '''
