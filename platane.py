@@ -96,7 +96,7 @@ def save_body(path, d, m, env):
         errors = []
         if m['to'] and m['from'] and m['to'] < m['from']:
             errors.extend( ('to','from') )
-        if (not 'load' in original or original['load'] == '') and (not 'effort' in original and original['effort'] == ''):
+        if (not 'load' in original or original['load'] == '') and (not 'effort' in original or original['effort'] == ''):
             errors.extend( ('load', 'effort') )
         if len(errors) > 0:
             raise model.ParseException(original, errors)

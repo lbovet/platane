@@ -102,9 +102,9 @@ def sort_schedule(items, schedule):
                 start = j
             if slots[j] > 0:
                 end = j
-        s.append( ( i['category'], i['name'] if '[' in i['name'] or i['supertask'] or i['subtask'] else 'zzz', i['priority'], start, -i['load'], end, i['name'] ) )
+        s.append( ( i['category'], i['name'] if '[' in i['name'] or i['supertask'] or i['subtask'] else ' ', i['priority'], start, end, i['name'] ) )
     s.sort()
-    return [ k[6] for k in s ]
+    return [ k[5] for k in s ]
     
 '''
 Schedule the given items into the slots, updates the slots
@@ -204,7 +204,6 @@ items: { <int>, items [ ] }
 '''
 def itemize(tasks, resolution, work=True):
     start, end = bounds(tasks, resolution)
-    print tasks
     for t in tasks:
         if not t.has_key('to') or not t['to']:
             t['to'] = end
@@ -270,7 +269,6 @@ corresponding to each week: (slot_start, nb_days, max_effort).
 def max_week_effort(items, tasks, slots, start_date, end_date, resolution):
     result = {}
     upper_bound = end_date
-    print slots
     for name in sorted(items.keys()):
         item = items[name]
         item_weeks = []
@@ -306,7 +304,6 @@ def max_week_effort(items, tasks, slots, start_date, end_date, resolution):
             if i == len(slots):
                 break 
         result[item['name']] = item_weeks
-    print result
     return result
 
 '''
