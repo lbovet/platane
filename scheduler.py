@@ -313,7 +313,6 @@ def get_super_task_for_day(super_task_name, d, tasks):
     for name, task in tasks.iteritems():
         if name.startswith(super_task_name) and name.split('[')[0].strip()==super_task_name:
             if task['from'] <= d and ('to' not in task or not task['to'] or task['to'] >= d):
-                print super_task_name, d, task['load']
                 return task   
 
 '''
