@@ -264,6 +264,7 @@ if __name__ == '__main__':
     opt_parser.add_option("-p", "--port", dest="port",
                       help="Listen port (defaults to 7780)", metavar="PORT")
     opt_parser.add_option("-d", action="store_true", dest="debug", help="Logs debug information on the console")
+    opt_parser.add_option("-s", dest="solver", help="Choose the underlying LP solver: 'builtin' (default) or 'lpsolve'", metavar="SOLVER")
     (options, args) = opt_parser.parse_args()
     if options.root:
         model.root = options.root
@@ -271,10 +272,13 @@ if __name__ == '__main__':
         model.root = root
     if options.debug:
         restlite._debug = True
+        scheduler.debug = True
     if options.port:
         port = int(options.port)
     else:
         port = 7780        
+    if options.solver:
+        scheduler.solver=options.solver
     httpd = make_server('', port, application)    
     print "Pre-loading jira tasks..."
     model.traverse("/", lambda x : "")

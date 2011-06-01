@@ -23,6 +23,8 @@ import re
 from copy import copy, deepcopy
 from pprint import pprint
 
+debug = False
+
 # constants for resolution and period
 day=0
 week=1
@@ -113,7 +115,7 @@ def schedule(items, tasks, slots, size, start_date, end_date, resolution):
     sorted_items = sorted( list(items.values()), key=lambda item: (item['from'], -item['load'], item['to']))
     week_effort_limit = max_week_effort(items, tasks, slots, start_date, end_date, resolution)
     f, A, b, edges = generate_matrix(sorted_items, slots, size, week_effort_limit, resolution)
-    optimum = calculate(f, A, b)
+    optimum = calculate(f, A, b, resolution)
     s = {}
     for name in items.keys():
         s[name] = [0]*len(slots)
@@ -174,24 +176,57 @@ def generate_matrix(items, slots, size, week_effort_limit, resolution):
                     b.append(week_effort[1])
                 w+=1
     # constraints on slot capacity
+    size=len(slots)
+    t=0
     for i in sorted( slot_usage.keys() ):
         line = [0]*n
         for p in slot_usage[i]:
             line[p] = 1.0
+            # adapt weight decreasingly in time to minimize holes in planning
+            f[p] = time_weight(f[p], t, size)
+        t+=1
         A.append(line)
         b.append(slots[i])
     return f, A, b, edges
     
+def time_weight(value, t, size):
+    return 1 + value * float( size - t ) / size
+    
+def calculate(f, A, b, resolution):
+    return solvers[solver](f, A, b, resolution)
+    
 '''
 Delegate to simplex algorithm to optimize the planning.
 '''
-def calculate(f, A, b):
-    n=len(A[0])
+def calculate_simplex(f, A, b, resolution):
     fr=[ -x for x in f ]
     constraints=[]
     for i in range(0, len(A)):
         constraints.append( ( A[i], b[i] ) )
     return simplex.simplex(fr, constraints)
+
+'''
+Delegate to lpsolve to optimize the planning
+'''
+def calculate_lpsolve(f, A, b, resolution):
+    from lpsolve55 import lpsolve, IMPORTANT, LE
+    n=len(f)
+    lp = lpsolve('make_lp', 0, len(f))
+    if not debug:
+        lpsolve('set_verbose', lp, IMPORTANT)
+    lpsolve('set_obj_fn', lp, [ -x for x in f ])
+    for i in range(len(A)):
+        lpsolve('add_constraint', lp, A[i], LE, b[i])    
+    lpsolve('set_lowbo', lp, [0]*n)
+    lpsolve('set_upbo', lp, [slot_size(resolution)]*n)
+    lpsolve('solve', lp)
+    result = lpsolve('get_variables', lp)[0]
+    lpsolve('delete_lp', lp)    
+    return result
+    
+solver = 'builtin'
+solvers = { 'builtin' : calculate_simplex,
+            'lpsolve' : calculate_lpsolve }       
     
 '''
 Transform the task list in schedulable items and compute slots.
@@ -328,7 +363,6 @@ def remove_overlap(task_dict, criteria, started_wins=True):
     to_delete=set()
     for t in sorted(l):
         if previous:
-            print t[1], previous
             if not 'to' in previous or not previous['to'] or previous['to'] >= t[1]['from']:
                 if started_wins:    
                     if not 'to' in previous or not previous['to'] or ('to' in t[1] and t[1]['to'] and t[1]['to'] <= previous['to']):
