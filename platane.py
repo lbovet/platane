@@ -105,7 +105,11 @@ def save_body(path, d, m, env):
         model.save(path, m)
         return "\n", model.parent(path)
     if d['type'] == 'list' and 'name' in m:
-        new_path = path+"/"+m['name']
+        name = m['name']
+        name = name.replace('?', '')
+        name = name.replace('/', '')
+        name = name.replace('#', '')
+        new_path = path+"/"+name
         if path.strip() == '':
             return "\n", path
         model.create(new_path)    
