@@ -27,6 +27,7 @@ import copy
 import scheduler
 import visualize
 import jira
+from pprint import pprint
 import re
 from Cheetah.Template import Template
 
@@ -151,7 +152,7 @@ def handle(env, start_response, handler, m=None):
             start_response('302 Redirect', [('Location', redirect+"/"+close)])            
             return
         else:
-            start_response('200 OK', [('Content-Type', 'text/html'), ('Content-Length', str(len(content)))])        
+            start_response('200 OK', [('Content-Type', 'text/html;charset=utf-8'), ('Content-Length', str(len(content)))])        
             return content 
     except model.NotFoundException as e:   
         import traceback
@@ -175,7 +176,7 @@ def show_tasks(path, env):
     if 'x' in qs:
         expand.update(qs['x'])
     return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks/plan/', 'url': path+'/', 'refreshable': False }, 
-        resolution=week, expand=expand), 'text/html'
+        resolution=week, expand=expand), 'text/html;charset=utf-8'
     
 def show_unit_tasks(path, env):
     schedules_by_date = {}

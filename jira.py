@@ -44,7 +44,7 @@ def load_task(issue_key):
         task['effort'] = detail['fields']['timetracking']['value']['timeestimate'] / (8.0*60.0)
         task['name'] = issue_key
         task['link'] = jira_scheme+'://'+jira_host+"/browse/"+issue_key
-        task['description'] = detail['fields']['summary']['value']
+        task['description'] = unicode(detail['fields']['summary']['value'])
         if detail['fields'].has_key('duedate') and detail['fields']['duedate'].has_key('value'):
             date_string = detail['fields']['duedate']['value'][:10]
             d = datetime.datetime.strptime(date_string, '%Y-%m-%d')

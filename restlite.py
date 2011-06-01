@@ -95,6 +95,7 @@ def router(routes):
                         response, env['RESPONSE_STATUS'] = [traceback.format_exc()], '500 Internal Server Error'
                     if response is None: response = []
                     headers = env.get('RESPONSE_HEADERS', [('Content-Type', 'text/plain')])
+                    headers.append( ('Accept-Charset', 'utf-8') )
                     orig = Cookie.SimpleCookie(); cookie = env['COOKIE']
                     if 'HTTP_COOKIE' in env: orig.load(env['HTTP_COOKIE'])
                     map(lambda x: cookie.__delitem__(x), [x for x in orig if x in cookie and str(orig[x]) == str(cookie[x])])

@@ -20,6 +20,7 @@ import yaml
 import datetime
 import re
 import copy
+import urllib
 
 handlers = {}
 
@@ -321,7 +322,8 @@ schema = yaml.load( file(data+'/schema', 'r'))
 
 import os, os.path, shutil
 
-def create_internal(path, d):        
+def create_internal(path, d):    
+    path = encode(path)
     if d['type'] == 'leaf':
         if not os.path.exists(root+parent(path)):
             os.makedirs(root+'/'.join(path.split('/')[:-1]))
@@ -331,13 +333,15 @@ def create_internal(path, d):
             os.makedirs(root+path)
     if d.has_key('children'):
         for c in d['children']:
+            c = decode(c)
             if not os.path.exists(root+path+'/'+c):
                 os.mkdir(root+path+'/'+c)
     
 def load_internal(path, d):    
+    path = encode(path)
     if os.path.exists(root+path):
         if d['type'] == 'list':
-            return sorted(os.listdir(root+path))
+            return [ decode(elt) for elt in sorted(os.listdir(root+path)) ]
         if d['type'] == 'leaf':
             return yaml.load(file(root+path))
     else:
@@ -346,18 +350,20 @@ def load_internal(path, d):
         if describe(p)['type'] == 'dict':
             create_internal(p, p_d)
             if d['type'] == 'list':
-                return sorted(os.listdir(root+path))
+                return [ decode(elt) for elt in sorted(os.listdir(root+path)) ]
             if d['type'] == 'leaf':
                 return yaml.load(file(root+path))            
         raise NotFoundException('Path not found: '+path)
 
 def save_internal(path, attributes, d):
+    path = encode(path)
     if os.path.exists(root+path):
         yaml.dump(attributes, file(root+path, "w"));
     else:
         raise NotFoundException('Path not found: '+path)    
 
 def delete_internal(path, d):
+    path = encode(path)
     if os.path.exists(root+path):
         if d['type'] == 'leaf':
             os.remove(root+path)
@@ -387,6 +393,12 @@ def invalid_cache(path, parents=True, children=True):
 
 def remove_cache(elt):
     del cache[elt[0]]
+
+def encode(s):
+    return urllib.quote(s, ' []/' )
+
+def decode(s):
+    return urllib.unquote(s)
 
 # test
 
