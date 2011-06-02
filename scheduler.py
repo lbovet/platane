@@ -209,7 +209,6 @@ def calculate_simplex(f, A, b, resolution):
 Delegate to lpsolve to optimize the planning
 '''
 def calculate_lpsolve(f, A, b, resolution):
-    from lpsolve55 import lpsolve, IMPORTANT, LE
     n=len(f)
     lp = lpsolve('make_lp', 0, len(f))
     if not debug:
@@ -225,6 +224,12 @@ def calculate_lpsolve(f, A, b, resolution):
     return result
     
 solver = 'builtin'
+try:
+    from lpsolve55 import lpsolve, IMPORTANT, LE
+    solver = 'lpsolve'
+except Exception, e:
+    print "Cannot use lpsolve: "+str(e)
+        
 solvers = { 'builtin' : calculate_simplex,
             'lpsolve' : calculate_lpsolve }       
     

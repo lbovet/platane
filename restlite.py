@@ -64,6 +64,8 @@ def router(routes):
         if 'wsgiorg.routing_args' not in env: env['wsgiorg.routing_args'] = dict()
         env['COOKIE'] = Cookie.SimpleCookie()
         if 'HTTP_COOKIE' in env: env['COOKIE'].load(env['HTTP_COOKIE'])
+        if not 'QUERY_STRING' in env:
+            env['QUERY_STRING']= None
         
         for route in routes:
             method, pattern = route[0].split(' ', 1)

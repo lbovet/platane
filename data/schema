@@ -9,7 +9,7 @@ root:
                                 tasks:
                                     dict:
                                         plan:
-                                            list: 
+                                            list:
                                                 attributes: &task
                                                     name: str
                                                     description: str

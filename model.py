@@ -148,6 +148,9 @@ Save the attributes on an existing path.
 def save(path, attributes):
     path = normalize(path)
     d = describe(path)
+    if 'cache' in d:
+        print "Invalidate from cache: "+path
+        invalid_cache(path)
     if d and d['type'] == 'leaf':
         check_attributes(attributes, d['attributes'])
         if 'handlers' in d:
@@ -166,6 +169,9 @@ Delete a path.
 def delete(path):
     path = normalize(path)
     d = describe(path)
+    if 'cache' in d:
+        print "Invalidate from cache: "+path
+        invalid_cache(path)   
     if d and d['type'] == 'list':
         for i in load(path):
             delete(path+"/"+i)
