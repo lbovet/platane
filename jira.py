@@ -3,6 +3,7 @@ import json
 import datetime
 import os.path, getpass
 from xmlrpclib import Server
+import traceback
 
 jira_scheme = 'https'
 jira_host = 'jira.pnet.ch'
@@ -20,19 +21,23 @@ useSoap = True
 def load_keys(username):
     if not enabled:
         return []
-    if useSoap:
-        from suds.client import Client
-        client = Client('http://%s/rpc/soap/jirasoapservice-v2?wsdl'%jira_host)
-        auth = client.service.login(credentials['username'], credentials['password'])
-        issues = client.service.getIssuesFromJqlSearch(auth, 'resolution = Unresolved AND assignee = %s AND "User flags" = Visible and remainingEstimate > 0' % username, 50)
-    else:
-        s = Server(jira_scheme+'://%s/rpc/xmlrpc' % jira_host)
-        auth = s.jira1.login(credentials['username'], credentials['password'])
-        issues = s.jira1.getIssuesFromJqlSearch(auth, 'resolution = Unresolved AND assignee = %s AND "User flags" = Visible and remainingEstimate > 0' % username)
-    result = list()
-    for issue in issues:
-        result.append(issue['key'])
-    return sorted(result)
+    try:        
+        if useSoap:
+            from suds.client import Client
+            client = Client('http://%s/rpc/soap/jirasoapservice-v2?wsdl'%jira_host)
+            auth = client.service.login(credentials['username'], credentials['password'])
+            issues = client.service.getIssuesFromJqlSearch(auth, 'resolution = Unresolved AND assignee = %s AND "User flags" = Visible and remainingEstimate > 0' % username, 50)
+        else:
+            s = Server(jira_scheme+'://%s/rpc/xmlrpc' % jira_host)
+            auth = s.jira1.login(credentials['username'], credentials['password'])
+            issues = s.jira1.getIssuesFromJqlSearch(auth, 'resolution = Unresolved AND assignee = %s AND "User flags" = Visible and remainingEstimate > 0' % username)
+        result = list()
+        for issue in issues:
+            result.append(issue['key'])
+        return sorted(result)
+    except:
+        traceback.print_exc()        
+        return []
 
 def load_task(issue_key):
     url = jira_scheme+'://%s:%s@%s/rest/api/2.0.alpha1/issue/%s' % (credentials['username'], credentials['password'], jira_host, issue_key)
@@ -53,11 +58,20 @@ def load_task(issue_key):
     else:
         return None
 
+def load_projects():
+    if not enabled:
+        return []
+    from suds.client import Client
+    client = Client('http://%s/rpc/soap/jirasoapservice-v2?wsdl'%jira_host)
+    auth = client.service.login(credentials['username'], credentials['password'])
+    projects = client.service.getProjectsNoSchemes(auth)
+    return sorted([ p.key for p in projects ])
+
 if __name__ == '__main__':
 
     tasks = []
-    for issue in load_keys('bovetl'):
-        tasks.append(load_task(issue))
+    #for issue in load_keys('bovetl'):
+    #    tasks.append(load_task(issue))
 
-    print tasks
-    
+    #print tasks
+    print load_projects()

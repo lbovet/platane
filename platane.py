@@ -50,8 +50,6 @@ def get_body(path, d, m, env):
     if parent:
         parent_type = model.describe(parent)['type']
     if 'cache' in d:
-        if 'r' in qs and qs['r'][0]=='1':
-            model.invalid_cache(model.normalize(path))
         refreshable = True
     vars = { 'context': '/', 'path':path, 'parent_type': parent_type, 'qs': qs, 'refreshable': refreshable, 'url' : path+"/"}
     if d['type'] == 'leaf':
@@ -129,7 +127,7 @@ def delete_body(path, d, m, env):
     else:
         raise restlite.Status, '403 Forbidden' 
     
-def handle(env, start_response, handler, m=None):
+def handle(env, start_response, handler, m=None):    
     path = get_path(env)
     if len(path) > 0 and not path[-1] == '/':
         start_response('302 Redirect', [('Location', model.normalize(path)+"/")])            
@@ -141,13 +139,16 @@ def handle(env, start_response, handler, m=None):
             content, mime = eval(d['function']+'(path, env)')
             start_response('200 OK', [('Content-Type', mime), ('Content-Length', str(len(content)))])        
             return content
+        qs = urlparse.parse_qs(env['QUERY_STRING'])
         if not m:
+            if 'cache' in d:
+                if 'r' in qs and qs['r'][0]=='1':
+                    model.invalid_cache(path)       
             m = model.load(path)
         content, redirect = handler(path, d, m, env)
         if redirect:
             redirect = model.normalize(redirect)
             close=''
-            qs = urlparse.parse_qs(env['QUERY_STRING'])
             if 'c' in qs:
                 if qs['c'][0]=='0':
                     close='?c=1'
@@ -182,13 +183,18 @@ def show_tasks(path, env):
     return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks/plan/', 'url': path+'/', 'refreshable': False }, 
         resolution=week, expand=expand), 'text/html;charset=utf-8'
     
-def show_unit_tasks(path, env):
-    schedules_by_date = {}
+def show_unit_tasks(path, env):    
     people = model.parent(path)+'/people'
+    person_list = model.load(people)
+    dates, slots, s = prepare_people_tasks(  [ ( people, person) for person in person_list ] )
+    return visualize.render(dates, slots, sorted(s), vars={'qs':{}, 'context':'/', 'path':path, 'sum':True, 'url': path+'/', 'refreshable': False }), "text/html"
+    
+def prepare_people_tasks(persons, project=None):
+    schedules_by_date = {}
     min_date = datetime.date.today() + datetime.timedelta(days=90)
     max_date = datetime.date.today()
     n=0
-    for person in model.load(people):
+    for people, person in persons:
         tasks = []
         model.traverse( people+'/'+person, lambda p : tasks.append(p[1]) )
         dates, slots, sched = scheduler.prepare_schedule(tasks, resolution=week)
@@ -201,6 +207,11 @@ def show_unit_tasks(path, env):
         else:
             l = []
             schedules_by_date[dates[0]] = l
+        if project:
+            slots = [0]*len(slots)
+            for i in sched:
+                if i[0].startswith(project) and not i[0] == project:
+                    slots = visualize.add_list(slots, i[1])                    
         l.append([ person, slots, sum(slots), sum(slots), {'url': people+'/'+person+'/planning' } ])
         n+=1.0
     dates = [ d for d in scheduler.calendar(from_date=min_date, to_date=max_date) ]
@@ -220,13 +231,31 @@ def show_unit_tasks(path, env):
     s = []
     for i in schedules_by_date.values():
         s.extend(i)
+    return dates, slots, s
+
+def show_project(path, env):
+    m=re.match(r"^.*projects/([^/]+)$", path)
+    project=m.group(1)
+    # Find people planned on this project
+    persons = set()
+    model.traverse( '/', lambda p : add_if_working_on(model.normalize(p[0]), project, persons) )     
+    dates, slots, s = prepare_people_tasks(  persons, project )
     return visualize.render(dates, slots, sorted(s), vars={'qs':{}, 'context':'/', 'path':path, 'sum':True, 'url': path+'/', 'refreshable': False }), "text/html"
 
+def add_if_working_on(path, project, persons):
+    m=re.match(r"(^.*people)/([^/]+)/tasks/[^/]+/([^/]+)", path)
+    if m and m.groups()[2].startswith(project):
+        persons.add( (m.groups()[0], m.groups()[1]) )
+        
 def jira_load_list(path):
     m=re.match(r"^.*people/([^/]+).*$", path)
     username=m.group(1)
     return jira.load_keys(username)
 model.handlers['jira_load_list'] = jira_load_list
+
+def jira_load_projects(path):
+    return jira.load_projects()
+model.handlers['jira_load_projects'] = jira_load_projects   
 
 def jira_load_task(path):
     m=re.match(r"^.*/([^/]+)$", path)
@@ -281,7 +310,7 @@ if __name__ == '__main__':
         scheduler.solver=options.solver    
     print "Using solver: "+scheduler.solver
     httpd = make_server('', port, application)    
-    print "Pre-loading jira tasks..."
+    print "Pre-loading cached tasks..."
     model.traverse("/", lambda x : "")
     print "Hello, platane runs on http://localhost:"+str(port)+"/"
     try: httpd.serve_forever()

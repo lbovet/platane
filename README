@@ -10,11 +10,10 @@ Features
 * Automatic scheduling of tasks
 * Highlighting of tasks in overflow
 * Integration with Jira
+* Adapter for Outlook to send absences to Platane
 
 Coming soon:
-* REST API to manage tasks
-* Export of generated schedule as Excel file
-* Adapter for Outlook to send tasks/holidays to Platane
+* See the issue list
 
 Requirements
 ------------
@@ -23,6 +22,7 @@ Requirements
 * Cheetah template engine: easy_install cheetah
 * pyYAML parser/emitter: easy_install pyyaml
 * Suds soap client: easy_install suds
+* Optional: install lpsolve and its Python bindings for a very fast planning algorithm
 
 Installation & Usage
 --------------------
@@ -40,3 +40,7 @@ Data is stored by default under the data/ dir. To have it somewhere else,
 * Either specify where with the --root option.
 * Or create ~/.platane/root
 
+Credits
+-------
+
+Thanks to the Swiss Post for sponsoring this project.

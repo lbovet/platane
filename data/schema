@@ -41,3 +41,12 @@ root:
                     planning:
                         render:
                             function: show_unit_tasks
+        projects:
+            readonly: true
+            cache: true
+            list:
+                readonly: true
+                render:
+                    function: show_project
+            handlers:
+                load: jira_load_projects
