@@ -530,7 +530,6 @@ Renders a schedule
 '''
 def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=week, expand=[]):
     dates, slots, sched = prepare_schedule(tasks, resolution)
-    print sched
     return visualize.render(dates, slots, sched, vars, resolution, expand)
 
 def prepare_schedule(tasks, resolution=day, work=True):

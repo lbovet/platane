@@ -56,7 +56,7 @@
     #set previous = $t[5]
     #set supertask = ('supertask' in $t[4] and $t[4]['supertask'])
     #if 'url' in $t[4]
-        #if $t[4]['description']
+        #if 'description' in $t[4] and $t[4]['description']
             <a target="_blank" class="hasTooltip" class="$highlight" href="$t[4]['url']?c=1">$t[0]<span>$t[0] - $t[4]['description']</span></a>$arrow
         #else
             <a target="_blank" class="hasTooltip" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>$arrow
@@ -83,7 +83,7 @@
 </tr>
 #end for
 <tr><td class="title">
-#if not $sum
+#if not $sum and ( not 'f' in $qs or not $qs['f'][0]=='p' )
     <form action="$add/?c=0" target="_blank" method="POST" name="new">
         <input size="6" type="text" name="name" value=""></input>
         <input type="submit" value="+"></input>
@@ -100,4 +100,7 @@
     #end for
 </tr>
 </table>
+#if not 'f' in $qs or not $qs['f'][0]=='p'
+    <div style="clear:both;float: right"><small><a target="_blank" href="$url?f=p" class="light"><br><img border="0" src="http://cdn1.iconfinder.com/data/icons/miniicons2/printer.gif"></a></small></div>
+#end if
 #include "footer.html"

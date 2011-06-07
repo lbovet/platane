@@ -37,8 +37,13 @@
     <style>
     body { background-color: white; font-family: helvetica; }
     body,td { font-size: 10pt; font-family: helvetica; }
-    .margin { margin: 80px; float:left; }
-    .frame { border: 1px solid lightgrey; padding: 30px; float:left; }
+    #if 'f' in $qs and $qs['f'][0]=='p'
+        .margin { }
+        .frame { }
+    #else
+        .margin { margin: 80px; float:left; }
+        .frame { border: 1px solid lightgrey; padding: 30px; float:left; }
+    #end if
     table { text-align: center; border-collapse: collapse; border-right: 1px solid lightgrey;}
     .legend {
             font-size: 8pt;
@@ -105,7 +110,7 @@
 
     a { color: black; text-decoration: none; }
     a:hover { color:black; text-decoration: underline; }
-    a:visited { color: black; }
+    a:visited {  }
     a.overflow {
         color: #bb2222;
     }
@@ -115,19 +120,21 @@
 <div class="margin">
 <div class="frame">
 <div style="width: 22em"></div>
-#if $refreshable
-    <div style="float:right"><a href="$url?r=1"><img border="0" src="http://cdn5.iconfinder.com/data/icons/TWG_Retina_Icons/24/arrow_circle_left.png"/></a></div>
-#end if
-#if $name == 'home'
-    <small>[ <a href="http://github.com/lbovet/platane">platane</a> $version ]</small>
-#else
-    <small>
-    <a href="$context">home</a>
-    #set $a = $context
-    #for $p in $path.split('/')[1:-1]
-        #set $a = $a + $p + '/'
-        > <a href="$a">$p</a>
-    #end for
-    </small>
+#if not 'f' in $qs or not $qs['f'][0]=='p'
+    #if $refreshable
+        <div style="float:right"><a href="$url?r=1"><img border="0" src="http://cdn5.iconfinder.com/data/icons/TWG_Retina_Icons/24/arrow_circle_left.png"/></a></div>
+    #end if
+    #if $name == 'home'
+        <small>[ <a href="http://github.com/lbovet/platane">platane</a> $version ]</small>
+    #else
+        <small>
+        <a href="$context">home</a>
+        #set $a = $context
+        #for $p in $path.split('/')[1:-1]
+            #set $a = $a + $p + '/'
+            > <a href="$a">$p</a>
+        #end for
+        </small>
+    #end if
 #end if
 <h2>$title_name</h2>

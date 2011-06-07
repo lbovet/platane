@@ -180,14 +180,14 @@ def show_tasks(path, env):
     expand=set()
     if 'x' in qs:
         expand.update(qs['x'])
-    return scheduler.render(tasks, { 'path': path, 'qs' : {}, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks/plan/', 'url': path+'/', 'refreshable': False }, 
+    return scheduler.render(tasks, { 'path': path, 'qs' : qs, 'context' : '/', 'sum': False, 'add': model.parent(path)+'/tasks/plan/', 'url': path+'/', 'refreshable': False }, 
         resolution=week, expand=expand), 'text/html;charset=utf-8'
     
 def show_unit_tasks(path, env):    
     people = model.parent(path)+'/people'
     person_list = model.load(people)
     dates, slots, s = prepare_people_tasks(  [ ( people, person) for person in person_list ] )
-    return visualize.render(dates, slots, sorted(s), vars={'qs':{}, 'context':'/', 'path':path, 'sum':True, 'url': path+'/', 'refreshable': False }), "text/html"
+    return visualize.render(dates, slots, sorted(s), vars={'qs':urlparse.parse_qs(env['QUERY_STRING']), 'context':'/', 'path':path, 'sum':True, 'url': path+'/', 'refreshable': False }), "text/html"
     
 def prepare_people_tasks(persons, project=None):
     schedules_by_date = {}
@@ -240,7 +240,7 @@ def show_project(path, env):
     persons = set()
     model.traverse( '/', lambda p : add_if_working_on(model.normalize(p[0]), project, persons) )     
     dates, slots, s = prepare_people_tasks(  persons, project )
-    return visualize.render(dates, slots, sorted(s), vars={'qs':{}, 'context':'/', 'path':path, 'sum':True, 'url': path+'/', 'refreshable': False }), "text/html"
+    return visualize.render(dates, slots, sorted(s), vars={'qs':urlparse.parse_qs(env['QUERY_STRING']), 'context':'/', 'path':path, 'sum':True, 'url': path+'/', 'refreshable': False }), "text/html"
 
 def add_if_working_on(path, project, persons):
     m=re.match(r"(^.*people)/([^/]+)/tasks/[^/]+/([^/]+)", path)

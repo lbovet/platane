@@ -1,28 +1,30 @@
 </div>
-<div style="clear:both; width: 24em;">
-<br/><small class="light">new in 0.5:
-<ul>
-<li>integration with Outlook: Get the <a href="https://github.com/lbovet/platane/raw/master/platane.bas">VBA Macro</a>, open the Visual Basic Editor (menu Tools->Macro), import the macro file and close the editor. Then customize your Outlook toolbar, add a button calling the PlataneSync Macro. Click on it regularly!
-<li>project view
-<li>integrated lpsolve, very fast native solver
-<li>fixed charset problems
-</ul>
-<br/><small class="light">new in 0.4:
-<ul>
-<li>super tasks, example: the load of task PROJECT-nnn will be limited by the load of task PROJECT
-<li>group tasks, example: tasks PROJECT [1], PROJECT [2] will be automatically disjoint in time and collapsed in view
-<li>added absence flag and special scheduling rules (no overflow, remaining used as base for other tasks)
-<li>fixed many small scheduling bugs
-</ul>
-<br/><small class="light">new in 0.3:
-<ul>
-<li>now tasks can be specified with an effort <i>and</i> a load</li>
-<li>integration with jira (currently read-only)</li>
-<li>fixed bug limiting load-based task to 90 days</li>
-<li>known bug: load-based tasks with from/to are not accurately scheduled</li>
-</ul>
-</small>
-</div>
-</div>
+#if not 'f' in $qs or not $qs['f'][0]=='p'
+    <div style="clear:both; width: 24em;">
+    <br/><small class="light">new in 0.5:
+    <ul>
+    <li>integration with Outlook: Get the <a href="https://github.com/lbovet/platane/raw/master/platane.bas">VBA Macro</a>, open the Visual Basic Editor (menu Tools->Macro), import the macro file and close the editor. Then customize your Outlook toolbar, add a button calling the PlataneSync Macro. Click on it regularly!
+    <li>project view
+    <li>integrated lpsolve, very fast native solver
+    <li>fixed charset problems
+    </ul>
+    <br/><small class="light">new in 0.4:
+    <ul>
+    <li>super tasks, example: the load of task PROJECT-nnn will be limited by the load of task PROJECT
+    <li>group tasks, example: tasks PROJECT [1], PROJECT [2] will be automatically disjoint in time and collapsed in view
+    <li>added absence flag and special scheduling rules (no overflow, remaining used as base for other tasks)
+    <li>fixed many small scheduling bugs
+    </ul>
+    <br/><small class="light">new in 0.3:
+    <ul>
+    <li>now tasks can be specified with an effort <i>and</i> a load</li>
+    <li>integration with jira (currently read-only)</li>
+    <li>fixed bug limiting load-based task to 90 days</li>
+    <li>known bug: load-based tasks with from/to are not accurately scheduled</li>
+    </ul>
+    </small>
+    </div>
+    </div>
+#end if
 </body>
 </html>
