@@ -220,6 +220,8 @@ def calculate_lpsolve(f, A, b, resolution):
     lpsolve('set_upbo', lp, [slot_size(resolution)]*n)
     lpsolve('solve', lp)
     result = lpsolve('get_variables', lp)[0]
+    if not type(result) == list:
+        result = [ result ]
     lpsolve('delete_lp', lp)    
     return result
     

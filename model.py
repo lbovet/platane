@@ -250,10 +250,10 @@ def check_date(d):
     return d
     
 def check_string(s):
-    if isinstance(s, basestring):
+    if isinstance(s, unicode):
         return s
     else:
-        return str(s)
+        return unicode(s, "utf8")
 
 types = { 'int': [0, int],
              'date': [ None, check_date],
@@ -349,7 +349,7 @@ def load_internal(path, d):
         if d['type'] == 'list':
             return [ decode(elt) for elt in sorted(os.listdir(root+path)) ]
         if d['type'] == 'leaf':
-            return yaml.load(file(root+path))
+            return yaml.load(file(root+path, "rb"))
     else:
         p = parent(path)
         p_d = describe(p)
@@ -364,7 +364,7 @@ def load_internal(path, d):
 def save_internal(path, attributes, d):
     path = encode(path)
     if os.path.exists(root+path):
-        yaml.dump(attributes, file(root+path, "w"));
+        yaml.dump(attributes, file(root+path, "wb"), allow_unicode=True);
     else:
         raise NotFoundException('Path not found: '+path)    
 

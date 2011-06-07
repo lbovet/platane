@@ -1,4 +1,3 @@
-Attribute VB_Name = "Platane"
 '  Copyright 2011 Laurent Bovet <laurent.bovet@windmaster.ch>
 '
 '  This file is part of Platane.
@@ -44,14 +43,20 @@ Sub PlataneSync()
 
     Set calFolder = NameSpace.GetDefaultFolder(9)
     
-    today = Date - 1
-    dateString = FormatDateTime(today, vbShortDate) & " " & FormatDateTime(today, vbShortTime)
     Message = " events sent to Platane:" + Chr(10)
     
-    For Each Item In calFolder.Items.Restrict("[BusyStatus] = 3 and [End] > '" & dateString & "'")
+    today = Date - 1
+    todayString = FormatDateTime(today, vbShortDate) & " " & FormatDateTime(today, vbShortTime)
+    after = Date + 120
+    afterString = FormatDateTime(after, vbShortDate) & " " & FormatDateTime(after, vbShortTime)
+    
+    For Each Item In calFolder.Items.Restrict("[BusyStatus] = 3 and [End] > '" & todayString & "' and [Start] < '" & afterString & "'")
         If Item.RecurrenceState = olApptNotRecurring And Item.Duration > 24 * 60 Then
             intCounter = intCounter + 1
-            task = "absence [" & Item & " " & intCounter & "]"
+            ItemName = Item.Subject
+            ItemName = Replace(ItemName, "[", "(")
+            ItemName = Replace(ItemName, "]", ")")
+            task = "absence [" & ItemName & " " & intCounter & "]"
             Message = Message & Chr(13) & Chr(10) & Item
             
             StartDate = FormatDateTime(Item.Start, vbShortDate)
