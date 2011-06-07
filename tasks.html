@@ -43,10 +43,8 @@
     #end if
     <td class="title $highlight">
     #set arrow=''
-    #set before=''
     #if $t[0] in $collapse
-        #set before='<a href="'+$url+'?x='+$t[0]+'">'
-        #set arrow='<span class="button">&nbsp;&or;</span></a>'
+        #set arrow='<a href="'+$url+'?x='+$t[0]+'"><span class="button">&nbsp;&or;</span></a>'
     #end if
     #if $t[5] in $expand
         #if not $t[5]==previous
@@ -58,9 +56,13 @@
     #set previous = $t[5]
     #set supertask = ('supertask' in $t[4] and $t[4]['supertask'])
     #if 'url' in $t[4]
-        <a target="_blank" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>$arrow
+        #if $t[4]['description']
+            <a target="_blank" class="hasTooltip" class="$highlight" href="$t[4]['url']?c=1">$t[0]<span>$t[4]['description']</span></a>$arrow
+        #else
+            <a target="_blank" class="hasTooltip" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>$arrow
+        #end if
     #else
-        $before$t[0]$arrow
+        $t[0]$arrow
     #end if
     </td><td class="title light">
     #if $t[2] > 0

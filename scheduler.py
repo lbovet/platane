@@ -113,8 +113,8 @@ Schedule the given items into the slots, updates the slots
 '''
 def schedule(items, tasks, slots, size, start_date, end_date, resolution):
     sorted_items = sorted( list(items.values()), key=lambda item: (item['from'], -item['load'], item['to']))
-    week_effort_limit = max_week_effort(items, tasks, slots, start_date, end_date, resolution)
-    f, A, b, edges = generate_matrix(sorted_items, slots, size, week_effort_limit, resolution)
+    week_effort_limit, super_task_limit = max_week_effort(items, tasks, slots, start_date, end_date, resolution)
+    f, A, b, edges = generate_matrix(sorted_items, slots, size, week_effort_limit, super_task_limit, resolution)
     optimum = calculate(f, A, b, resolution)
     s = {}
     for name in items.keys():
@@ -127,7 +127,7 @@ def schedule(items, tasks, slots, size, start_date, end_date, resolution):
 '''
 Prepare the Ax <= b matrix and vector. Also provide the corresponding edges (task, slot)
 '''
-def generate_matrix(items, slots, size, week_effort_limit, resolution):
+def generate_matrix(items, slots, size, week_effort_limit, super_task_limit, resolution):
     edges = []
     A = []
     b = []
@@ -141,6 +141,7 @@ def generate_matrix(items, slots, size, week_effort_limit, resolution):
     pos = 0
     slot_usage = {}
     # constraints on task effort
+    super_task_lines = {}
     for item in items:
         line = [0]*n
         wp=pos
@@ -155,6 +156,9 @@ def generate_matrix(items, slots, size, week_effort_limit, resolution):
             A.append(line)
             b.append(item['effort'])
         #constraint on max week effort
+        super_task_name = get_super_task(item['name'], [ i['name'] for i in items ])
+        if super_task_name and not super_task_name in super_task_lines.keys():            
+            super_task_lines[super_task_name] = [ [ [0.0]*n, 0 ]  for i in range(len(super_task_limit[super_task_name])) ]            
         if item['name'] in week_effort_limit.keys():
             week_efforts = week_effort_limit[item['name']]
             d=0
@@ -165,12 +169,18 @@ def generate_matrix(items, slots, size, week_effort_limit, resolution):
                     for wd in range(week_effort[0]):
                         if d >= item['from'] and d <= item['to']:
                             line[wp] = 1.0
+                            if super_task_name:
+                                super_task_lines[super_task_name][w][0][wp] = 1.0                                
                             wp+=1
                         d+=1
                 if resolution==week:
                     if w >= item['from'] and w <= item['to']:
                         line[wp] = 1.0
+                        if super_task_name:
+                            super_task_lines[super_task_name][w][0][wp] = 1.0
                         wp+=1
+                if super_task_name:
+                    super_task_lines[super_task_name][w][1] = super_task_limit[super_task_name][w]
                 if sum(line) > 0:
                     A.append(line)
                     b.append(week_effort[1])
@@ -187,6 +197,12 @@ def generate_matrix(items, slots, size, week_effort_limit, resolution):
         t+=1
         A.append(line)
         b.append(slots[i])
+    # supertask constraints
+    for super_task, lines in super_task_lines.iteritems():
+        for line_effort in lines:
+            if sum(line_effort[0]) > 0:
+                A.append(line_effort[0])
+                b.append(line_effort[1])
     return f, A, b, edges
     
 def time_weight(value, t, size):
@@ -311,6 +327,7 @@ corresponding to each week: (slot_start, nb_days, max_effort).
 def max_week_effort(items, tasks, slots, start_date, end_date, resolution):
     result = {}
     upper_bound = end_date
+    super_task_weeks = {}
     for name in sorted(items.keys()):
         item = items[name]
         item_weeks = []
@@ -319,26 +336,34 @@ def max_week_effort(items, tasks, slots, start_date, end_date, resolution):
         else:
             load = 1.0
         i=0
+        w=0
         days=0
         max_effort = 0
+        super_task_effort = 0
         super_task_name = get_super_task(name, items.keys())
         for d in calendar(start_date, upper_bound):
             days+=1
             if d >= item['from_date'] and d <= item['to_date']:                
-                new_load=load
                 if super_task_name:
                     super_task = get_super_task_for_day(super_task_name, d, tasks)
                     if super_task and 'load' in super_task:
-                        new_load = min(load, super_task['load'])
-                max_effort = max_effort + new_load * slots[i]                
+                        super_task_effort = super_task_effort + super_task['load'] * slots[i]
+                max_effort = max_effort + load * slots[i]                
             if d.weekday() == 4 or d ==upper_bound:
                 # close the week
                 if resolution==week:
                     max_effort = max_effort / days
+                    super_task_effort = super_task_effort / days
                 week_tuple = (days, max_effort)
                 item_weeks.append(week_tuple)
+                if super_task_name:
+                    if not super_task_name in super_task_weeks.keys():
+                        super_task_weeks[super_task_name] = [0]*len(slots)
+                    super_task_weeks[super_task_name][w] = super_task_effort
+                w+=1
                 days = 0
                 max_effort = 0
+                super_task_effort = 0
                 if resolution==week:
                     i+=1
             if resolution==day:
@@ -346,7 +371,7 @@ def max_week_effort(items, tasks, slots, start_date, end_date, resolution):
             if i == len(slots):
                 break 
         result[item['name']] = item_weeks
-    return result
+    return result, super_task_weeks
 
 '''
 Return the super task for the given day (may differ in case the super task is a group).
@@ -505,6 +530,7 @@ Renders a schedule
 '''
 def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=week, expand=[]):
     dates, slots, sched = prepare_schedule(tasks, resolution)
+    print sched
     return visualize.render(dates, slots, sched, vars, resolution, expand)
 
 def prepare_schedule(tasks, resolution=day, work=True):
