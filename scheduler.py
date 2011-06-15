@@ -264,9 +264,9 @@ def itemize(tasks, resolution, work=True):
     start, end = bounds(tasks, resolution)
     for t in tasks:
         if not t.has_key('to') or not t['to']:
-            t['to'] = end
             if t['effort'] > 0:
                 end = end + timedelta(t['effort'])
+            t['to'] = end
     slots = []
     items = {}
     treated = {}
@@ -447,6 +447,8 @@ def process_super_tasks(tasks):
                         last = tasks[sub_task]['to']
             if last >= task['from']:
                 task['from'] = last + timedelta(days=1)
+            if task['from'] > task['to']:
+                task['from'] = task['to'] + timedelta(days=1)
         
 sub_task_re = re.compile(r'^(.+)\-[0-9]+$')
 
@@ -537,7 +539,6 @@ def prepare_schedule(tasks, resolution=day, work=True):
         slots = dailify(slots, start, end, work, True)
         for s in sched:
             s[1] = dailify(s[1], start, end, work, True)
-    print slots
     slots = [ 1.0-v for v in slots ]
     dates = [ c for c in calendar(start, size=len(slots)) ]
     return dates, slots, sched
