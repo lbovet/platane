@@ -447,7 +447,7 @@ def process_super_tasks(tasks):
                         last = tasks[sub_task]['to']
             if last >= task['from']:
                 task['from'] = last + timedelta(days=1)
-            if task['from'] > task['to']:
+            if task['to'] and task['from'] > task['to']:
                 task['from'] = task['to'] + timedelta(days=1)
         
 sub_task_re = re.compile(r'^(.+)\-[0-9]+$')
