@@ -262,10 +262,20 @@ items: { <int>, items [ ] }
 '''
 def itemize(tasks, resolution, work=True):
     start, end = bounds(tasks, resolution)
+    suppl_load=0 
+    for t in tasks:
+        if not t.has_key('to') or not t['to']:
+            if t['load'] > 0:
+                suppl_load = suppl_load + t['load']
+    orig_end = end
     for t in tasks:
         if not t.has_key('to') or not t['to']:
             if t['effort'] > 0:
-                end = end + timedelta(t['effort'])
+                end = end + timedelta(t['effort'])                              
+    end = end + timedelta(int(( end - orig_end ).days * suppl_load))
+    end = orig_end + timedelta(int(( end - orig_end ).days * ( 7 / 5.0 )))
+    for t in tasks:
+        if not t.has_key('to') or not t['to']:            
             t['to'] = end
     slots = []
     items = {}

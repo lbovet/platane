@@ -46,11 +46,11 @@ def get_body(path, d, m, env):
     parent_type = None
     parent = model.parent(path)
     qs = urlparse.parse_qs(env['QUERY_STRING'])
-    refreshable = False
+    refreshable = 0
     if parent:
         parent_type = model.describe(parent)['type']
     if 'cache' in d:
-        refreshable = True
+        refreshable = 1
     vars = { 'context': '/', 'path':path, 'parent_type': parent_type, 'qs': qs, 'refreshable': refreshable, 'url' : path+"/"}
     if d['type'] == 'leaf':
         for k,v in m.iteritems():
