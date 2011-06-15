@@ -64,7 +64,7 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
             actual_slots = base_slots
         else:
             actual_slots = updated_slots
-        sched, week_effort_limit = schedule(items, original_task_dict, actual_slots, slot_size(resolution, work), start_date, end_date, resolution) 
+        sched, week_effort_limit = schedule(items, original_task_dict, actual_slots, slot_size(resolution, work), start_date, end_date, resolution)
         updated_slots = actual_slots
         s.update(sched)
         w.update(week_effort_limit)
@@ -447,8 +447,6 @@ def process_super_tasks(tasks):
                         last = tasks[sub_task]['to']
             if last >= task['from']:
                 task['from'] = last + timedelta(days=1)
-            else:
-                task['to'] = task['from']-timedelta(days=1)
         
 sub_task_re = re.compile(r'^(.+)\-[0-9]+$')
 
@@ -536,9 +534,10 @@ def prepare_schedule(tasks, resolution=day, work=True):
     tasks = clean_tasks(tasks)
     start, end, slots, sched = schedule_tasks(tasks, resolution=resolution)
     if resolution==week:
-        slots = dailify(slots, start, end, work, False)
+        slots = dailify(slots, start, end, work, True)
         for s in sched:
             s[1] = dailify(s[1], start, end, work, True)
+    print slots
     slots = [ 1.0-v for v in slots ]
     dates = [ c for c in calendar(start, size=len(slots)) ]
     return dates, slots, sched

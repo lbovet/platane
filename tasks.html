@@ -57,16 +57,20 @@
     #set supertask = ('supertask' in $t[4] and $t[4]['supertask'])
     #if 'url' in $t[4]
         #if 'description' in $t[4] and $t[4]['description']
-            <a target="_blank" class="hasTooltip" class="$highlight" href="$t[4]['url']?c=1">$t[0]<span>$t[0] - $t[4]['description']</span></a>$arrow
+            <a target="_blank" class="hasTooltip $highlight" href="$t[4]['url']?c=1">$t[0]<span>$t[0] - $t[4]['description']</span></a>$arrow
         #else
-            <a target="_blank" class="hasTooltip" class="$highlight" href="$t[4]['url']?c=1">$t[0]</a>$arrow
+            <a target="_blank" class="hasTooltip $highlight" href="$t[4]['url']?c=1">$t[0]</a>$arrow
         #end if
     #else
         $t[0]$arrow
     #end if
     </td><td class="title light">
     #if $t[2] > 0
-        $round($t[2],1)
+        <a target="_blank" class="hasTooltip $highlight">$round($t[2],1)
+         #if (round($t[3],3) != round($t[2],3))
+            <span>Could schedule only $t[3] days, lacks $round(t[2]-t[3], 1) days!</span>
+         #end if
+         </a>
     #end if
     </td>
     #for $i in $t[1]
