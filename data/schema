@@ -1,52 +1,61 @@
 root:
     dict:
-        units:
+        branches:
             list:
                 dict:
-                    people:
+                    units:
                         list:
                             dict:
-                                tasks:
-                                    dict:
-                                        plan:
-                                            list:
-                                                attributes: &task
-                                                    name: str
-                                                    description: str
-                                                    priority: int
-                                                    from: date
-                                                    to: date
-                                                    effort: float
-                                                    load: float
-                                                    absence: bool
-                                        outlook:
-                                            readonly: true
-                                            list:
-                                                attributes: *task
-                                                readonly: true 
-                                        jira:
-                                            readonly: true
-                                            list:
-                                                readonly: true
-                                                attributes: *task
-                                                cache: true
-                                                handlers: 
-                                                    load: jira_load_task
-                                            handlers: 
-                                                load: jira_load_list
-                                            cache: true
-                                planning:
-                                    render:
-                                        function: show_tasks                                                                                    
-                    planning:
-                        render:
-                            function: show_unit_tasks
-        projects:
-            readonly: true
-            cache: true
-            list:
-                readonly: true
-                render:
-                    function: show_project
-            handlers:
-                load: jira_load_projects
+                                teams:
+                                    list:
+                                        dict:
+                                            people:
+                                                list:
+                                                    dict:
+                                                        tasks:
+                                                            dict:
+                                                                plan:
+                                                                    list:
+                                                                        attributes: &task
+                                                                            name: str
+                                                                            description: str
+                                                                            priority: int
+                                                                            from: date
+                                                                            to: date
+                                                                            effort: float
+                                                                            load: float
+                                                                            absence: bool
+                                                                outlook:
+                                                                    readonly: true
+                                                                    list:
+                                                                        attributes: *task
+                                                                        readonly: true 
+                                                                jira:
+                                                                    readonly: true
+                                                                    list:
+                                                                        readonly: true
+                                                                        attributes: *task
+                                                                        cache: true
+                                                                        handlers: 
+                                                                            load: 
+                                                                                function: jira_load_task
+                                                                    handlers: 
+                                                                        load: 
+                                                                            function: jira_load_list
+                                                                    cache: true
+                                                        planning:
+                                                            render:
+                                                                function: show_tasks
+                                            planning:
+                                                render:
+                                                    function: show_unit_tasks
+                                projects:
+                                    readonly: true
+                                    cache: true
+                                    list:
+                                        readonly: true
+                                        render:
+                                            function: show_project
+                                    handlers:
+                                        load: 
+                                            function: jira_load_projects

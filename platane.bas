@@ -1,3 +1,4 @@
+Attribute VB_Name = "Platane"
 '  Copyright 2011 Laurent Bovet <laurent.bovet@windmaster.ch>
 '
 '  This file is part of Platane.
@@ -21,23 +22,28 @@ Private Declare Function apiGetUserName Lib "advapi32.dll" Alias _
 
 Sub PlataneSync()
 
-    Prefix = "http://maven:7780/units/"
-    Middle = "/people/"
-    Suffix = "/tasks/outlook/"
-    
+    ' The construction of the URL depends on your structure. Adapt accordingly.'
+    url = "http://maven:7780/branches/BRANCH/units/UNIT/teams/TEAM/people/USER/tasks/outlook/"
     Set NameSpace = Application.GetNamespace("MAPI")
     LogonName = fOSUserName()
     UserName = NameSpace.CurrentUser
     UnitPosition = InStr(UserName, ", ")
     UnitPosition = UnitPosition + 2
-    Unit = Mid(UserName, UnitPosition)
-    
-    url = Prefix & Unit & Middle & LogonName & Suffix
-    
-    Set webClient = CreateObject("WinHttp.WinHttpRequest.5.1")
-    webClient.Option(6) = False 'Prevent redirects
-    webClient.Open "POST", url, False
-    webClient.Send ("method=DELETE")
+    SubUnit = Mid(UserName, UnitPosition)
+    url = Replace(url, "USER", LogonName)
+    If Len(SubUnit) = 5 Then
+        url = Replace(url, "TEAM", SubUnit)
+    Else
+        url = Replace(url, "TEAM", "default")
+    End If
+    url = Replace(url, "UNIT", Left(SubUnit, 4))
+    url = Replace(url, "BRANCH", Left(SubUnit, 3))
+
+    result = Send(url, "method=DELETE")
+    If Not result = "OK" Then
+        MsgBox (result)
+        Exit Sub
+    End If
     
     Dim intCounter As Integer
 
@@ -63,10 +69,11 @@ Sub PlataneSync()
             EndDate = FormatDateTime(Item.End - 1, vbShortDate)
             
             Set webClient = CreateObject("WinHttp.WinHttpRequest.5.1")
-            webClient.Option(6) = False 'Prevent redirects
-            webClient.Open "POST", url & task & "/", False
-            PostData = "name=" & task & "&load=100&from=" & StartDate & "&to=" & EndDate & "&absence=true"
-            webClient.Send (PostData)
+            result = Send(url & task & "/", "name=" & task & "&load=100&from=" & StartDate & "&to=" & EndDate & "&absence=true")
+            If Not result = "OK" Then
+                MsgBox (result)
+                Exit Sub
+            End If
         End If
     Next
 
@@ -98,5 +105,17 @@ Dim strUserName As String
     End If
 End Function
 
+Function Send(url, data) As String
+    Set webClient = CreateObject("WinHttp.WinHttpRequest.5.1")
+    webClient.Option(6) = False 'Prevent redirects
+    webClient.Open "POST", url, False
+    webClient.Send (data)
+    webClient.WaitForResponse
+    If webClient.Status = "200" Or webClient.Status = "302" Then
+        Send = "OK"
+    Else
+        Send = "Problem while sending to Platane: Error " & webClient.Status
+    End If
+End Function
 
 
