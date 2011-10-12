@@ -23,7 +23,7 @@ Private Declare Function apiGetUserName Lib "advapi32.dll" Alias _
 Sub PlataneSync()
 
     ' The construction of the URL depends on your structure. Adapt accordingly.'
-    url = "http://maven:7780/branches/BRANCH/units/UNIT/teams/TEAM/people/USER/tasks/outlook/"
+    url = "http://platane/branches/BRANCH/units/UNIT/teams/TEAM/people/USER/tasks/outlook/"
     Set NameSpace = Application.GetNamespace("MAPI")
     LogonName = fOSUserName()
     UserName = NameSpace.CurrentUser
@@ -107,6 +107,7 @@ End Function
 
 Function Send(url, data) As String
     Set webClient = CreateObject("WinHttp.WinHttpRequest.5.1")
+    webClient.SetAutoLogonPolicy (0)
     webClient.Option(6) = False 'Prevent redirects
     webClient.Open "POST", url, False
     webClient.Send (data)
