@@ -1,14 +1,46 @@
 root:
     dict:
+        projects:
+            dict:
+                jira:
+                    readonly: true
+                    cache: normal
+                    list:
+                        readonly: true
+                        render:
+                            function: show_project
+                    handlers:
+                        load: 
+                            function: jira_load_projects
+                other:
+                    list:
+                        attributes:
+                            name: str
+                        render:
+                            function: show_project     
         branches:
             list:
                 dict:
+                    planning:
+                        render:
+                            function: show_unit_tasks         
+                            parameters:
+                                groups: units                   
                     units:
                         list:
                             dict:
-                                teams:
+                                planning:
+                                    render:
+                                        function: show_unit_tasks         
+                                        parameters:
+                                            groups: teams                     
+                                teams:                                
                                     list:
                                         dict:
+                                            planning:
+                                                render:
+                                                    function: show_team_tasks   
+                                                cache: parent                                                                                    
                                             people:
                                                 list:
                                                     dict:
@@ -35,27 +67,16 @@ root:
                                                                     list:
                                                                         readonly: true
                                                                         attributes: *task
-                                                                        cache: true
+                                                                        cache: normal
                                                                         handlers: 
                                                                             load: 
                                                                                 function: jira_load_task
                                                                     handlers: 
                                                                         load: 
                                                                             function: jira_load_list
-                                                                    cache: true
+                                                                    cache: normal
                                                         planning:
                                                             render:
-                                                                function: show_tasks
-                                            planning:
-                                                render:
-                                                    function: show_unit_tasks
-                                projects:
-                                    readonly: true
-                                    cache: true
-                                    list:
-                                        readonly: true
-                                        render:
-                                            function: show_project
-                                    handlers:
-                                        load: 
-                                            function: jira_load_projects
+                                                                function: show_tasks    
+                                                            cache: parent                                                                                            
+                    

@@ -4,7 +4,7 @@
 ##
 ##  Platane is free software: you can redistribute it and/or modify
 ##  it under the terms of the GNU Lesser General Public License as 
-##  published bythe Free Software Foundation, either version 3 of the 
+##  published by the Free Software Foundation, either version 3 of the 
 ##  License, or (at your option) any later version.
 ##
 ##  Platane is distributed in the hope that it will be useful,
@@ -16,10 +16,11 @@
 ##  License along with Platane. 
 ##  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, timedelta
+# Produce the planning view by creating an intermediate structure suitable for the template
+
 from Cheetah.Template import Template
 import re
-tasks_template = Template.compile(file=file('tasks.html', "r"))
+tasks_template = None # Set by main: TODO refactor
 
 # constants for resolution and period
 day=0
@@ -31,7 +32,7 @@ grouped_task_re = re.compile(r'^(.*[^ ]) *\[(.+)\]$')
 '''
 Renders a schedule as HTML.
 '''
-def render(dates, slots, tasks, vars, resolution=day, expand=[]):
+def render(dates, slots, tasks, variables, resolution=day, expand=[]):
     slots = round_list(slots)
     ftasks = []
     g, separators = groups(dates, slots)
@@ -48,7 +49,7 @@ def render(dates, slots, tasks, vars, resolution=day, expand=[]):
                     continue
                 t = [ name, [0]*len(task[1]), 0, 0, task ]
                 missing = 0
-                for grouped_task in tasks: # merge with from/to dates
+                for grouped_task in tasks: # color_merge with from/to dates
                     m = grouped_task_re.match(grouped_task[0])
                     if m and m.groups()[0] == name:
                         t[1] = add_list(t[1], grouped_task[1])
@@ -60,15 +61,15 @@ def render(dates, slots, tasks, vars, resolution=day, expand=[]):
             else:
                 expand.add(name)
                 group=name
-        ftasks.append( (t[0].replace(' ','&nbsp;'), format(round_list(t[1]), separators, round(t[2],3)>round(t[3],3)), t[2], t[3], t[4], group ) ) 
-    all_vars = { 'dates' : merge(dates, separators_colors(separators)),
+        ftasks.append( {'label':t[0].replace(' ','&nbsp;'), 'slots':do_format(round_list(t[1]), separators, round(t[2],3)>round(t[3],3)), 'scheduled':t[2], 'expected':t[3], 'task':t[4], 'group':group } ) 
+    all_vars = { 'dates' : color_merge(dates, separators_colors(separators)),
          'groups' : g,
-         'slots' : format(slots, separators),
+         'slots' : do_format(slots, separators),
          'tasks' : ftasks,
          'collapse' : collapse,
          'expand' : expand
         }
-    all_vars.update(vars)
+    all_vars.update(variables)
     return str(tasks_template(searchList=[all_vars]))
 
 '''
@@ -92,21 +93,21 @@ def groups(dates, slots):
     i = 0
     for d in dates:
         sep = 0
-        if len(week) == 0 or not week[-1][0] == d.isocalendar()[1]:
+        if len(week) == 0 or not week[-1]['label'] == d.isocalendar()[1]:
             sep = 1
-            week.append( (d.isocalendar()[1], 1, slots[i]) )            
+            week.append( {"label":d.isocalendar()[1], "size":1, "effort": slots[i]} )            
         else:
-            week[-1] = ( d.isocalendar()[1], week[-1][1]+1, week[-1][2]+slots[i] )     
-        if len(month) == 0 or not month[-1][0] == d.strftime('%B'):
-            month.append( (d.strftime('%B'), 1, slots[i]) )        
+            week[-1] = {"label": d.isocalendar()[1], "size":week[-1]['size']+1, "effort":week[-1]['effort']+slots[i] }     
+        if len(month) == 0 or not month[-1]['label'] == d.strftime('%B'):
+            month.append( {"label":d.strftime('%B'), "size":1, "effort":slots[i]} )        
         else:
-            month[-1] = ( d.strftime('%B'), month[-1][1]+1, month[-1][2]+slots[i] )            
-        if len(year) == 0 or not year[-1][0] == d.year:
+            month[-1] = {"label": d.strftime('%B'), "size":month[-1]['size']+1, "effort":month[-1]['effort']+slots[i] }            
+        if len(year) == 0 or not year[-1]['label'] == d.year:
             if len(year) > 0:
                 sep = 1
-            year.append( (d.year, 1, slots[i]) )
+            year.append( {"label":d.year, "size":1, "effort":slots[i]} )
         else:
-            year[-1] = ( d.year, year[-1][1]+1, year[-1][2]+slots[i] )
+            year[-1] = {"label": d.year, "size":year[-1]['size']+1, "effort":year[-1]['effort']+slots[i] }
         separators.append(sep)
         i+=1
     return result, separators            
@@ -132,17 +133,17 @@ def color(value, overflow=False):
 '''
 Merges two lists in one list of 2-tuples.
 '''
-def merge(l, s):
+def color_merge(l, s):
     result = []
     for i in range(len(l)):
-        result.append( (l[i], s[i]) )
+        result.append( {'item':l[i], 'separator':s[i]} )
     return result
 
 '''
 Build a list from a slot value list with coloring information.
 '''
-def format(l, separators, overflow=False):
-    return merge([ (s, color(s, overflow)) for s in l ], separators_colors(separators))
+def do_format(l, separators, overflow=False):
+    return color_merge([ {'slot':s, 'color':color(s, overflow)} for s in l ], separators_colors(separators))
 
 '''
 Returns a color list for a separator list.

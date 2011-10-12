@@ -7,78 +7,78 @@
 #end if
 <tr><td class="title"></td><td class="title"></td>
     #for $i in $groups.year
-        <td class="legend" colspan="$i[1]"><span><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
-        #if i[1] != i[2]
-            <small>$int(round($factor*(i[1]-i[2]))) days free</small>
+        <td class="legend" colspan="$i['size']"><div style="overflow:hidden;width: ${$i['size']*1.1}em"><span><a href="#" class="hasTooltip">$i['label']<span>$int(round((i['effort']/i['size'])*100))%
+        #if i['size'] != i['effort']
+            <small>$int(round($factor*(i['size']-i['effort']))) days free</small>
         #end if
-        </span></a></span></td>
+        </span></a></span></div></td>
     #end for
 </tr>
 <tr><td class="title"></td><td class="title"></td>
     #for $i in $groups.month
-        <td class="legend" colspan="$i[1]"><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
-        #if i[1] != i[2]
-            <small>$round($factor*(i[1]-i[2]), 1) days free</small>
+        <td class="legend" colspan="$i['size']"><div style="overflow:hidden;width: ${$i['size']*1.1}em"><a href="#" class="hasTooltip">$i['label']<span>$int(round((i['effort']/i['size'])*100))%
+        #if i['size'] != i['effort']
+            <small>$round($factor*(i['size']-i['effort']), 1) days free</small>
         #end if
-        </span></a></td>
+        </span></a></div></td>
     #end for
 </tr>
 <tr><td class="title"></td><td class="title"></td>
     #for $i in $dates
-        <td class="legend tiny" style="border-left-color: $i[1];"><div style="width: 1.1em">$i[0].day</div></td>
+        <td class="legend tiny" style="border-left-color: $i['separator'];"><div style="width: 1.1em">$i['item'].day</div></td>
     #end for
 </tr>
 <tr><td class="title light">total</td><td class="title light">$len($slots)</td>
     #for $i in $slots
-        <td class="slot total" style="border-left-color: $i[1];" bgcolor="$i[0][1]"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i[0][0]*100))%</span></a></td>
+        <td class="slot total" style="border-left-color: $i['separator'];" bgcolor="$i['item']['color']"><a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i['item']['slot']*100))%</span></a></td>
     #end for
 </tr>
 #set previous=None
 #for $t in $tasks
 <tr>
-    #if (round($t[3],3) != round($t[2],3))
+    #if (round($t['expected'],3) != round($t['scheduled'],3))
         #set $highlight = 'overflow'
     #else
         #set $highlight = ''
     #end if
     <td class="title $highlight">
     #set arrow=''
-    #if $t[0] in $collapse
-        #set arrow='<a href="'+$url+'?x='+$t[0]+'"><span class="button">&nbsp;&or;</span></a>'
+    #if $t['label'] in $collapse
+        #set arrow='<a href="'+$url+'?x='+$t['label']+'"><span class="button">&nbsp;&or;</span></a>'
     #end if
-    #if $t[5] in $expand
-        #if not $t[5]==previous
+    #if $t['group'] in $expand
+        #if not $t['group']==previous
             #set arrow='<span class="button">&nbsp;<a class="light" href="'+$url+'">&and;</a></span>'
         #else
             #set arrow='<span class="button">&nbsp;&nbsp;</span>'
         #end if
     #end if
-    #set previous = $t[5]
-    #set supertask = ('supertask' in $t[4] and $t[4]['supertask'])
-    #if 'url' in $t[4]
-        #if 'description' in $t[4] and $t[4]['description']
-            <a target="_blank" class="hasTooltip $highlight" href="$t[4]['url']?c=1">$t[0]<span>$t[0] - $t[4]['description']</span></a>$arrow
+    #set previous = $t['group']
+    #set supertask = ('supertask' in $t['task'] and $t['task']['supertask'])
+    #if 'url' in $t['task']
+        #if 'description' in $t['task'] and $t['task']['description']
+            <a target="_blank" class="hasTooltip $highlight" href="$t['task']['url']?c=1">$t['label']<span>$t['label'] - $t['task']['description']</span></a>$arrow
         #else
-            <a target="_blank" class="hasTooltip $highlight" href="$t[4]['url']?c=1">$t[0]</a>$arrow
+            <a target="_blank" class="hasTooltip $highlight" href="$t['task']['url']?c=1">$t['label']</a>$arrow
         #end if
     #else
-        $t[0]$arrow
+        $t['label']$arrow
     #end if
     </td><td class="title light">
-    #if $t[2] > 0
-        <a target="_blank" class="hasTooltip $highlight">$round($t[2],1)
-         #if (round($t[3],3) != round($t[2],3))
-            <span>Could schedule only $t[3] days, lacks $round(t[2]-t[3], 1) days!</span>
+    #if $t['scheduled'] > 0
+        <a target="_blank" class="hasTooltip $highlight">$round($t['scheduled'],1)
+         #if (round($t['expected'],3) != round($t['scheduled'],3))
+            <span>Could schedule only $t['expected'] days, lacks $round(t['scheduled']-t['expected'], 1) days!</span>
          #end if
          </a>
     #end if
     </td>
-    #for $i in $t[1]
-        <td class="slot" style="border-left-color: $i[1];" bgcolor="$i[0][1]">
-            #if ($i[0][0] > 0.0)
-                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i[0][0]*100))% <small>on $t[0]</small>
-                #if (round($t[3],3) != round($t[2],3))
-                    but lacks $round(t[2]-t[3], 1) days!
+    #for $i in $t['slots']
+        <td class="slot" style="border-left-color: $i['separator'];" bgcolor="$i['item']['color']">
+            #if ($i['item']['slot'] > 0.0)
+                <a href="#" class="hasTooltip">&nbsp;&nbsp;<span>$int(round(i['item']['slot']*100))% <small>on $t['label']</small>
+                #if (round($t['expected'],3) != round($t['scheduled'],3))
+                    but lacks $round(t['scheduled']-t['expected'], 1) days!
                 #end if
                 </span></a>
             #end if
@@ -96,9 +96,9 @@
 #end if
 </td><td class="title"></td>
     #for $i in $groups.week
-        <td class="legend week" colspan="$i[1]"><a href="#" class="hasTooltip">$i[0]<span>$int(round((i[2]/i[1])*100))%
-        #if i[1] != i[2]
-            <small>$round($factor*(i[1]-i[2]), 1) days free</small>
+        <td class="legend week" colspan="$i['size']"><a href="#" class="hasTooltip">$i['label']<span>$int(round((i['effort']/i['size'])*100))%
+        #if i['effort'] != i['size']
+            <small>$round($factor*(i['size']-i['effort']), 1) days free</small>
         #end if
         </span></a></td>
     #end for

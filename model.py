@@ -4,7 +4,7 @@
 ##
 ##  Platane is free software: you can redistribute it and/or modify
 ##  it under the terms of the GNU Lesser General Public License as 
-##  published bythe Free Software Foundation, either version 3 of the 
+##  published by the Free Software Foundation, either version 3 of the 
 ##  License, or (at your option) any later version.
 ##
 ##  Platane is distributed in the hope that it will be useful,
@@ -16,15 +16,23 @@
 ##  License along with Platane. 
 ##  If not, see <http://www.gnu.org/licenses/>.
 
+# Provides access to the data hierarchy
+
 import yaml
 import datetime
 import re
 import copy
 import urllib
+import traceback
+import memcache
+import os.path, shutil
+import logging
 
 handlers = {}
-
 cache = {}
+schema = None
+
+log = logging.getLogger("platane.model")
 
 # interface 
 
@@ -36,6 +44,7 @@ A dictionary containing:
 - A 'children' list containing child names (for dict and list types)
 - A 'render' function name for a special rendering
 Returns None if path does not match the schema
+Awful code. Please refactor :)
 '''
 def describe(path):
     path = normalize(path)
@@ -43,7 +52,7 @@ def describe(path):
     path='root'+path
     attributes = None
     children = None
-    type = None
+    path_type = None
     handlers = {}
     cache = {}
     for name in path.split('/'):              
@@ -55,14 +64,14 @@ def describe(path):
         cache = get_cache(element)
         level = as_dict(element)
         if level:
-            type = 'dict'
+            path_type = 'dict'
             children = sorted(level.keys())
             attributes = get_attributes(level)
             element = level
             continue
         level = as_list(element)
         if level:
-            type = 'list'
+            path_type = 'list'
             dict_item = as_dict(level)
             if dict_item:
                 children = sorted(dict_item.keys())                
@@ -73,15 +82,20 @@ def describe(path):
             continue
         level = as_render(element)
         if level:
-            return { 'type': 'render', 'function': level['function'] }
+            result = { 'type': 'render', 'function': level['function']}
+            if 'parameters' in level:
+                result['parameters'] = level['parameters']
+            if 'cache' in element:
+                result['cache'] = element['cache']                           
+            return result
         attr = get_attributes(element)
         if attr:
-            type='leaf'
+            path_type='leaf'
             children = None
             attributes = attr
             continue
         return None                        
-    result = { 'type': type }
+    result = { 'type': path_type }
     if attributes:
         result['attributes'] = attributes
     if children:
@@ -98,15 +112,15 @@ Idempotent, will not fail if the path already exist.
 '''
 def create(path):
     path = normalize(path)
-    d = describe(path)
-    if d:
-        if 'handlers' in d:
-            if 'create' in d['handlers']:
-                handlers[d['handlers']['create']](path)
+    descriptor = describe(path)
+    if descriptor:
+        if 'handlers' in descriptor:
+            if 'create' in descriptor['handlers']:
+                handlers[descriptor['handlers']['create']](path)
                 return
             else:
                 raise Exception("Read only")
-        create_internal(path, d)
+        create_internal(path, descriptor)
     else:
         raise NotFoundException('Invalid path '+path)
         
@@ -115,29 +129,35 @@ Loads the attributes or items of given path.
 '''
 def load(path):
     path = normalize(path)
-    cached = load_cache(path)
-    if cached:
-        print "Returning cached "+path
+    cached = load_from_cache(path)
+    if cached is not None:
+        log.debug("Returning cached %s", path)
         return cached
-    d = describe(path)   
-    if d:
+    descriptor = describe(path)   
+    if descriptor:
         result = None
-        if d['type'] == 'dict':
-            return d['children']
+        if descriptor['type'] == 'dict':
+            return descriptor['children']
         else:
-            if 'handlers' in d:
-                if 'load' in d['handlers']:
-                    result = handlers[d['handlers']['load']](path)
+            if 'handlers' in descriptor:
+                if 'load' in descriptor['handlers']:
+                    load_handler = descriptor['handlers']['load']
+                    parameters = {}
+                    if 'parameters' in load_handler:
+                        parameters = load_handler['parameters']
+                    result = handlers[load_handler['function']](path, parameters)
                 else:
                     raise Exception("Write only")
             else:
-                result = load_internal(path, d)        
-        if d['type'] == 'leaf':            
-            check_attributes(result, d['attributes'], fix=True)
+                result = load_internal(path, descriptor)      
+        if result == None:
+            return None  
+        if descriptor['type'] == 'leaf':            
+            check_attributes(result, descriptor['attributes'], fix=True)
             result['url'] = path+"/"
-        if 'cache' in d:
-            print "Caching "+path
-            put_cache(path, copy.copy(result))
+        if 'cache' in descriptor:
+            log.debug("Caching %s", path)
+            put_in_cache(path, copy.copy(result))
         return result
     else:
         raise NotFoundException('Invalid path: '+path)
@@ -147,19 +167,20 @@ Save the attributes on an existing path.
 '''
 def save(path, attributes):
     path = normalize(path)
-    d = describe(path)
-    if 'cache' in d:
-        print "Invalidate from cache: "+path
-        invalid_cache(path)
-    if d and d['type'] == 'leaf':
-        check_attributes(attributes, d['attributes'])
-        if 'handlers' in d:
-            if 'save' in d['handlers']:
-                handlers[d['handlers']['save']](path, attributes)
+    descriptor = describe(path)
+    if 'cache' in descriptor:
+        log.debug("Invalidate cache: %s", path)
+        invalidate_cache(path)
+    if descriptor and (descriptor['type'] == 'leaf' or descriptor['type'] == 'render'):
+        if descriptor['type'] == 'leaf':
+            check_attributes(attributes, descriptor['attributes'])
+        if 'handlers' in descriptor:
+            if 'save' in descriptor['handlers']:
+                handlers[descriptor['handlers']['save']](path, attributes)
             else:
                 raise Exception("Read only")
         else:
-            save_internal(path, attributes, d)
+            save_internal(path, attributes, descriptor)
     else:
         raise NotFoundException('Invalid path or non-leaf path: '+path)
 
@@ -168,30 +189,36 @@ Delete a path.
 '''
 def delete(path):
     path = normalize(path)
-    d = describe(path)
-    if 'cache' in d:
-        print "Invalidate from cache: "+path
-        invalid_cache(path)   
-    if d and d['type'] == 'list':
+    descriptor = describe(path)
+    if 'cache' in descriptor:
+        log.debug("Invalidate cache: %s", path)
+        invalidate_cache(path)   
+    if descriptor and descriptor['type'] == 'list':
         for i in load(path):
             delete(path+"/"+i)
         return
-    if d and describe(parent(path))['type'] == 'list':
-        if 'handlers' in d:
-            if 'delete' in d['handlers']:
-                handlers[d['handlers']['delete']](path)
+    if descriptor and describe(parent(path))['type'] == 'list':
+        if 'handlers' in descriptor:
+            if 'delete' in descriptor['handlers']:
+                handlers[descriptor['handlers']['delete']](path)
             else:
                 raise Exception("Read only")
         else:
-            delete_internal(path, d)      
+            delete_internal(path, descriptor)      
     else:
         raise NotFoundException('Invalid path or not deletable: '+path)
 
+'''
+Exception raised when searched item was not found.
+'''
 class NotFoundException(Exception):
     pass
 
 # utilities
 
+'''
+Cleans a path into a canonical form.
+'''
 def normalize(path):
     path = path.strip()
     path = path.replace('..', '')
@@ -205,6 +232,9 @@ def normalize(path):
         path = '/' + path        
     return path
 
+'''
+Return the parent path of a given path.
+'''
 def parent(path):
     path = normalize(path)
     if len(path) > 0:
@@ -215,26 +245,38 @@ date_formats = ( (re.compile(r'^([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=i
                  (re.compile(r'^([0-9]?[0-9])\.([0-9]?[0-9])\.(20[0-9][0-9])$'), lambda(v) : v[0].replace(day=int(v[1][0]), month=int(v[1][1]), year=int(v[1][2])), 0),
                  (re.compile(r'^(20[0-9][0-9])-([0-9]?[0-9])-([0-9]?[0-9])$'), lambda(v) : v[0].replace(day=int(v[1][2]), month=int(v[1][1]), year=int(v[1][0]))), 0 )
 
-def traverse(path, function):
-    d = describe(path)
-    if d['type'] == 'leaf':
+'''
+Travers the sub tree of path and call function with one tuple parameter (path, object, descriptor).
+Only call function for leaf nodes (tasks), unless all_nodes is True.
+'''
+def traverse(path, function, all_nodes=False):
+    descriptor = describe(path)
+    if descriptor['type'] == 'leaf':
         try:
-            function( (path, load(path), d ) )
-        except ParseException, e:
-            import traceback
+            function( (path, load(path), descriptor ) )
+        except ParseException:
             traceback.print_exc() 
-    if d['type'] == 'dict' or d['type'] == 'list':
-        for child in load(path):
-            traverse(path+"/"+child, function)
+    if descriptor['type'] == 'dict' or descriptor['type'] == 'list':   
+        node = load(path)           
+        if all_nodes:
+            try:
+                function( (path, node, descriptor ) )
+            except ParseException:
+                traceback.print_exc()        
+        for child in node:
+            traverse(path+"/"+child, function, all_nodes)
 
-def check_date(d):
+'''
+Check a date string and return the corresponding date. Raise an exception if not parseable.
+'''
+def check_date(date_or_string):
     today = datetime.date.today()
-    if isinstance(d, basestring):
-        if d.strip() == '':
+    if isinstance(date_or_string, basestring):
+        if date_or_string.strip() == '':
             return None
         r = datetime.date.today()
         for f in date_formats:
-            m = f[0].match(d)
+            m = f[0].match(date_or_string)
             if m:                
                 new = f[1]( (r, m.groups()) )
                 # jump to next month
@@ -247,25 +289,38 @@ def check_date(d):
                         new = new.replace(new.year+1, new.month, new.day)
                 return new
         raise Exception()
-    return d
+    return date_or_string
     
+'''
+Check a string by converting it to unicode if needed.
+'''    
 def check_string(s):
     if isinstance(s, unicode):
         return s
     else:
         return unicode(s, "utf8")
 
+'''
+Maps the declared schema type to a constructor function
+'''
 types = { 'int': [0, int],
              'date': [ None, check_date],
              'str': [ "", check_string ],
              'float': [ 0.0, float ],
              'bool': [ False, bool ] }
 
+'''
+Exception holding parsing information and errors to display 
+'''
 class ParseException(Exception):
     def __init__(self, attributes, errors):
         self.attributes = attributes
         self.errors = errors
 
+'''
+Checks task attributes. Optional fix them to an appropriate default value.
+Raises a ParseException if erroneous and fix=False.
+'''
 def check_attributes(attr_dict, attr_schema, fix=False):
     errors = []
     original_attributes = {}
@@ -279,19 +334,22 @@ def check_attributes(attr_dict, attr_schema, fix=False):
             if fix:
                 attr_dict[attr] = types[attr_schema[attr]][0] 
             else:
-                import traceback
                 traceback.print_exc()
                 errors.append(attr)            
     if not fix and len(errors)>0:
         raise ParseException(original_attributes, errors)
 
-def check(path, m):
-    d = describe(path)
-    if d:
-        return check_attributes(m, d['attributes'])
+'''
+Check attributes of a path against the schema declaration 
+'''
+def check(path, attributes):
+    descriptor = describe(path)
+    if descriptor:
+        return check_attributes(attributes, descriptor['attributes'])
     else:
         raise NotFoundException('Invalid path: '+path)
 
+# accessor to sub.elements of the schema.
 def as_dict(element):
     if element.has_key('dict'):
         return element['dict']
@@ -320,85 +378,60 @@ def get_cache(element):
     else:
         return {}
 
-# filesystem implementation
+# filesystem implementation of storage functions
 
 data = 'data'
 root = data+'/root'
-schema = yaml.load( file(data+'/schema', 'r'))
 
-import os, os.path, shutil
-
-def create_internal(path, d):    
+def create_internal(path, descriptor):    
     path = encode(path)
-    if d['type'] == 'leaf':
+    if descriptor['type'] == 'leaf' or descriptor['type'] == 'render':
         if not os.path.exists(root+parent(path)):
             os.makedirs(root+'/'.join(path.split('/')[:-1]))
         yaml.dump({}, file(root+path, "w"));
-    if d['type'] == 'dict':        
+    if descriptor['type'] == 'dict':        
         if not os.path.exists(root+path):      
             os.makedirs(root+path)
-    if d.has_key('children'):
-        for c in d['children']:
+    if descriptor.has_key('children'):
+        for c in descriptor['children']:
             c = decode(c)
             if not os.path.exists(root+path+'/'+c):
                 os.mkdir(root+path+'/'+c)
     
-def load_internal(path, d):    
+def load_internal(path, descriptor):    
     path = encode(path)
     if os.path.exists(root+path):
-        if d['type'] == 'list':
+        if descriptor['type'] == 'list':
             return [ decode(elt) for elt in sorted(os.listdir(root+path)) ]
-        if d['type'] == 'leaf':
+        if descriptor['type'] == 'leaf':
             return yaml.load(file(root+path, "rb"))
     else:
         p = parent(path)
         p_d = describe(p)
         if describe(p)['type'] == 'dict':
             create_internal(p, p_d)
-            if d['type'] == 'list':
+            if descriptor['type'] == 'list':
                 return [ decode(elt) for elt in sorted(os.listdir(root+path)) ]
-            if d['type'] == 'leaf':
+            if descriptor['type'] == 'leaf':
                 return yaml.load(file(root+path))            
         raise NotFoundException('Path not found: '+path)
 
-def save_internal(path, attributes, d):
+def save_internal(path, attributes, descriptor):
     path = encode(path)
     if os.path.exists(root+path):
         yaml.dump(attributes, file(root+path, "wb"), allow_unicode=True);
     else:
         raise NotFoundException('Path not found: '+path)    
 
-def delete_internal(path, d):
+def delete_internal(path, descriptor):
     path = encode(path)
     if os.path.exists(root+path):
-        if d['type'] == 'leaf':
+        if descriptor['type'] == 'leaf':
             os.remove(root+path)
         else:
             shutil.rmtree(root+path)
 
-# Cache 
-
-def put_cache(path, object, group='default'):
-    cache[path] = (object, group)
-    
-def load_cache(path):
-    if path in cache:
-        return copy.deepcopy(cache[path][0])
-    
-def invalid_cache(path, parents=True, children=True):
-    p = path
-    while p:
-        if path in cache:
-            del cache[path]
-        if parents:
-            p = parent(p)
-        else:
-            break
-    if children:
-        traverse(path, remove_cache)
-
-def remove_cache(elt):
-    del cache[elt[0]]
+# Url encoding for filesystem names
 
 def encode(s):
     return urllib.quote(s, ' []/' )
@@ -406,18 +439,44 @@ def encode(s):
 def decode(s):
     return urllib.unquote(s)
 
-# test
+# Cache interface
+    
+def load_from_cache(path):
+    data = get_from_cache(path)
+    if data is not None:
+        return copy.deepcopy(data)
+    
+def invalidate_cache(path, parents=True, children=True):
+    p = path    
+    while p:
+        if p in cache:
+            data = get_from_cache(p)
+            remove_from_cache(p)                    
+        if parents:
+            p = parent(p)
+        else:
+            break
+    if children:
+        traverse(path, lambda x: remove_from_cache(x[0]), all_nodes=True)
 
-if __name__ == '__main__':    
-    p = '/units/IT121/people/bovetl/tasks/JIRA-23'
-    d = '/units/IT121/people/bovetl/tasks/'    
-    print describe(p)
-    create(p)
-    save(p, { 'name': 'JIRA-23' })
-    save(p, { 'name': 'JIRA-24' })
-    print load(p)
-    print load('/')
-    print load(d)
-    t = []
-    traverse('/units', lambda(x): t.append(x))
-    print t
+# Cache implementation. Uses memcache if available on localhost.
+
+ext_cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+
+def put_in_cache(path, obj):
+    if not ext_cache.set(urllib.quote(path, '/' ), obj):
+        log.debug("Putting in local cache: %s", path)
+        cache[path] = obj # Cache locally
+    
+def get_from_cache(path):
+    result = ext_cache.get(urllib.quote(path, '/' ))
+    if result is not None:
+        return result
+    if path in cache:
+        log.debug("Reading from local cache: %s", path)        
+        return cache[path]
+
+def remove_from_cache(path):
+    ext_cache.delete(urllib.quote(path, '/' ))
+    if path in cache:
+        del cache[path]

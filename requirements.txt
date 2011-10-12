@@ -1,0 +1,8 @@
+Cheetah==2.4.4
+Markdown==2.0.3
+PyYAML==3.10
+#lpsolve55==5.5.2.0
+numpy==1.6.1
+python-memcached==1.47
+suds==0.4
+wsgiref==0.1.2

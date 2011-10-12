@@ -23,7 +23,7 @@ Dependencies: Python 2.6.
 
 from wsgiref.util import setup_testing_defaults
 from xml.dom import minidom
-import os, re, sys, sqlite3, Cookie, base64, hashlib, time, traceback
+import re, sys, sqlite3, Cookie, base64, hashlib, time, traceback
 try: import json
 except: print 'Cannot import json. Please use Python 2.6.'; raise
 
@@ -60,6 +60,7 @@ def router(routes):
     if isinstance(routes, dict) or hasattr(routes, 'items'): routes = routes.iteritems()
     
     def handler(env, start_response):
+        import logging
         setup_testing_defaults(env)
         if 'wsgiorg.routing_args' not in env: env['wsgiorg.routing_args'] = dict()
         env['COOKIE'] = Cookie.SimpleCookie()
@@ -80,7 +81,7 @@ def router(routes):
                 if len(route) > 1:
                     new_methods, path = route[1].split(' ', 1)
                     env['REQUEST_METHOD'] = new_methods.split(',')[methods.index(env['REQUEST_METHOD'])]
-                    env['PATH_INFO'], ignore, env['QUERY_STRING'] = (path % match.groupdict()).partition('?')
+                    env['PATH_INFO'], ignore, env['QUERY_STRING'] = (path % match.groupdict()).partition('?') #@UnusedVariable
                     for name, value in [x.split('=', 1) for x in route[2:]]:
                         env[name] = value % match.groupdict()
                 env['wsgiorg.routing_args'].update(match.groupdict())
@@ -92,8 +93,9 @@ def router(routes):
                         if 'RESPONSE_HEADERS' not in env: env['RESPONSE_STATUS'], env['RESPONSE_HEADERS'] = status, headers
                     try: response = app(env, my_response)
                     except Status: response, env['RESPONSE_STATUS'] = None, str(sys.exc_info()[1])
-                    except: 
-                        if _debug: print traceback.format_exc() 
+                    except Exception, e:
+                        logging.getLogger("platane.restlite").error(e) 
+                        print traceback.format_exc() 
                         response, env['RESPONSE_STATUS'] = [traceback.format_exc()], '500 Internal Server Error'
                     if response is None: response = []
                     headers = env.get('RESPONSE_HEADERS', [('Content-Type', 'text/plain')])
@@ -178,28 +180,28 @@ def prettyxml(value):
     '''
     return minidom.parseString(xml(value)).toprettyxml().encode('utf-8')
 
-def represent(value, type='*/*'):
-    '''You can use this method to convert a unified value to JSON, XML or text based on the type. The JSON representation
-    is preferred if type is default, otherwise the type values of "application/json", "text/xml" and 
+def represent(value, mime_type='*/*'):
+    '''You can use this method to convert a unified value to JSON, XML or text based on the mime_type. The JSON representation
+    is preferred if mime_type is default, otherwise the mime_type values of "application/json", "text/xml" and 
     "text/plain" map to tojson, xml and str functions, respectively. If you would like to customize the representation of 
     your object, you can define _json_(), _xml_() and/or __str__() methods on your object. Note that _json_ and _xml_ 
     fall back to _list_ if available for getting the unified list representation, and __str__ falls back to __repr__ if 
-    available. The return value is a tuple containing type and value.
+    available. The return value is a tuple containing mime_type and value.
     
     >>> class user: 
     ...    def __init__(self, name): self.name = name
     ...    def _list_(self): return  ('allow', self.name)
     >>> u1, u2 = user('kundan'), user('admin')
     >>> value = ('file', (('name', 'myfile.txt'), ('acl', [u1, u2])))
-    >>> represent(value, type='application/json')[1]
+    >>> represent(value, mime_type='application/json')[1]
     '{"file": {"name": "myfile.txt", "acl": [{"allow": "kundan"}, {"allow": "admin"}]}}'
-    >>> represent(value, type='text/xml')[1]
+    >>> represent(value, mime_type='text/xml')[1]
     '<file><name>myfile.txt</name><acl><allow>kundan</allow><allow>admin</allow></acl></file>'
     '''
-    types = map(lambda x: x.lower(), re.split(r'[, \t]+', type))
+    types = map(lambda x: x.lower(), re.split(r'[, \t]+', mime_type))
     if '*/*' in types: types.append(defaultType)
-    for type, func in (('application/json', tojson), ('text/xml', xml), ('text/plain', str)):
-        if type in types: return (type, func(value))
+    for mime_type, func in (('application/json', tojson), ('text/xml', xml), ('text/plain', str)):
+        if mime_type in types: return (mime_type, func(value))
     return ('application/octet-stream', str(value))
 
 #------------------------------------------------------------------------------
@@ -214,9 +216,9 @@ class Request(dict):
         self.update(env.iteritems())
         self.__dict__.update(env.get('wsgiorg.routing_args', {}))
         self.start_response = start_response
-    def response(self, value, type=None):
-        type, result = represent(value, type if type is not None else self.get('ACCEPT', defaultType))
-        self.start_response('200 OK', [('Content-Type', type)])
+    def response(self, value, mime_type=None):
+        mime_type, result = represent(value, mime_type if mime_type is not None else self.get('ACCEPT', defaultType))
+        self.start_response('200 OK', [('Content-Type', mime_type)])
         return result
 
 class Status(Exception):
@@ -290,8 +292,8 @@ def bind(obj):
             elif isinstance(current, list): result = [('url', '%s/%d'%(env['SCRIPT_NAME'], i,)) for i in xrange(len(current))]
             elif isinstance(current, dict): result = tuple([(k, v if isinstance(v, basestring) else '%s/%s'%(env['SCRIPT_NAME'], k)) for k, v in current.iteritems()])
             else:result = current
-            type, value = represent(('result', result), type=env.get('ACCEPT', 'application/json'))
-            start_response('200 OK', [('Content-Type', type)])
+            mime_type, value = represent(('result', result), mime_type=env.get('ACCEPT', 'application/json'))
+            start_response('200 OK', [('Content-Type', mime_type)])
             return [value]
         else: raise Status, '405 Method Not Allowed'
     return handler
@@ -368,7 +370,7 @@ class Model(dict):
             for name, attrs in tables:
                 class klass(object):
                     _defn_ = [(y, z) for y, z in (x.split(' ', 1) for x in attrs) if y.lower() not in ('foreign', 'primary', 'key')]
-                    __doc__ = name + '\n  ' + '\n  '.join(['%s\t%s'%(x, y) for x, y in _defn_])  
+                    __doc__ = name + '\n  ' + '\n  '.join(['%s\t%s'%(x, y) for x, y in _defn_])  #@ReservedAssignment
                     _table_, _attrs_, _defn_ = name, [x for x, y in _defn_], [y for x, y in _defn_]
                     def __init__(self, *args, **kwargs):
                         keys = self.__class__._attrs_
@@ -390,7 +392,7 @@ user_login
     id integer primary key
     email text not null
     realm text not null
-    hash tinyblob(32) not null
+    auth_hash tinyblob(32) not null
     token tinyblob(32)
 '''
 
@@ -402,7 +404,7 @@ class AuthModel(Model):
         self.mypass = hashlib.md5(str(id(self)) + str(time.time())).hexdigest()
         self.create(_loginTable)
         
-    def hash(self, email, realm, password):
+    def auth_hash(self, email, realm, password):
         return hashlib.md5('%s:%s:%s'%(email, realm, password)).hexdigest()
     
     def token(self, user_id):
@@ -410,12 +412,12 @@ class AuthModel(Model):
         return hashlib.md5(self.mypass + str(user_id) + tm).hexdigest() + tm
     
     def valid(self, user_id, token):
-        hash, tm = token[:-10], token[-10:]
-        return hashlib.md5(self.mypass + str(user_id) + tm).hexdigest() == hash
+        auth_hash, tm = token[:-10], token[-10:]
+        return hashlib.md5(self.mypass + str(user_id) + tm).hexdigest() == auth_hash
     
-    def register(self, email, realm, password='', hash=None):
-        if not hash: hash = self.hash(email, realm, password)
-        self.sql('INSERT INTO user_login VALUES (NULL, ?, ?, ?, NULL)', (email, realm, hash))
+    def register(self, email, realm, password='', auth_hash=None):
+        if not auth_hash: auth_hash = self.auth_hash(email, realm, password)
+        self.sql('INSERT INTO user_login VALUES (NULL, ?, ?, ?, NULL)', (email, realm, auth_hash))
         user_id = self.sql1('SELECT last_insert_rowid()')[0]
         self.sql('UPDATE user_login SET token=? WHERE id=?', (self.token(user_id), user_id))
         return user_id
@@ -426,14 +428,14 @@ class AuthModel(Model):
             method, value = map(str.strip, hdr.split(' ', 1))
             if method == 'Basic':
                 email, password = base64.b64decode(value).split(':', 1)
-                found = self.sql1('SELECT id, hash FROM user_login WHERE email=?', (email,))
+                found = self.sql1('SELECT id, auth_hash FROM user_login WHERE email=?', (email,))
                 if not found: 
                     request.start_response('401 Unauthorized', [('WWW-Authenticate', 'Basic realm="%s"'%('localhost',))])
                     raise Status, '401 Not Found'
-                user_id, hash = found; 
+                user_id, auth_hash = found; 
                 realm = "localhost" # TODO: implement this
-                hash_recv = self.hash(email, realm, password)
-                if hash != hash_recv: 
+                hash_recv = self.auth_hash(email, realm, password)
+                if auth_hash != hash_recv: 
                     request.start_response('401 Unauthorized', [('WWW-Authenticate', 'Basic realm="%s"'%(realm,))])
                     raise Status, '401 Unauthorized'
                 token = self.token(user_id)
@@ -448,7 +450,7 @@ class AuthModel(Model):
                 if adminhash != request.token: raise Status, '401 Not Authorized'
                 user_id, email, token = 0, request.email, adminhash
             else:
-                found = self.sql1('SELECT id, email, token FROM user_login WHERE (id=? OR email=?) AND (token=? OR hash=?)', (request.user_id, request.email, request.token, request.token))
+                found = self.sql1('SELECT id, email, token FROM user_login WHERE (id=? OR email=?) AND (token=? OR auth_hash=?)', (request.user_id, request.email, request.token, request.token))
                 if not found:
                     if not self.sql1('SELECT id FROM user_login WHERE id=? OR email=?', (request.user_id, request.email)):
                         raise Status, '404 Not Found'
@@ -464,8 +466,8 @@ class AuthModel(Model):
         elif 'COOKIE' in request and 'user_id' in request['COOKIE'] and 'token' in request['COOKIE']:
             user_id, token = int(request['COOKIE'].get('user_id').value), request['COOKIE'].get('token').value
             if user_id == 0:
-                email = 'admin'; hash = hashlib.md5('%s::%s'%(email, self.mypass)).hexdigest()
-                if hash != token:
+                email = 'admin'; auth_hash = hashlib.md5('%s::%s'%(email, self.mypass)).hexdigest()
+                if auth_hash != token:
                     raise Status, '401 Not Authorized as Admin'
             else:
                 found = self.sql1('SELECT email FROM user_login WHERE id=? AND token=?', (user_id, token))

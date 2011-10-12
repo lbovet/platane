@@ -1,4 +1,4 @@
-from lpsolve55 import *
+from lpsolve55 import lpsolve, LE #@UnresolvedImport
 
 lp = lpsolve('make_lp', 0, 8)
 #lpsolve('set_verbose', lp, IMPORTANT)

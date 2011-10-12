@@ -4,7 +4,7 @@
 ##
 ##  Platane is free software: you can redistribute it and/or modify
 ##  it under the terms of the GNU Lesser General Public License as 
-##  published bythe Free Software Foundation, either version 3 of the 
+##  published by the Free Software Foundation, either version 3 of the 
 ##  License, or (at your option) any later version.
 ##
 ##  Platane is distributed in the hope that it will be useful,
@@ -42,11 +42,11 @@ def create_tableau(f,constraints):
     for i in range(len(constraints)):
         (c,a) = constraints[i]
         matrix.append(c)
-        matrix[i].extend([0.0 for x in range(n_const+1)])
+        matrix[i].extend([0.0 for x in range(n_const+1)]) #@UnusedVariable
         matrix[i][n_dim+i]=1.0
         ans.append(a)
     matrix.append(f)
-    matrix[n_const].extend([0.0 for x in range(n_const+1)])
+    matrix[n_const].extend([0.0 for x in range(n_const+1)]) #@UnusedVariable
     matrix[n_const][n_dim+n_const]=1.0
     ans.append(0.0)
     
@@ -93,6 +93,7 @@ def select_pivot_column(matrix):
 
 def select_pivot_row(matrix,ans,pivot_column):
     pivot_row = -1
+    max_val=0
     for i in range(len(matrix)-1):
         if matrix[i][pivot_column]>0:
             val = ans[i]/matrix[i][pivot_column]

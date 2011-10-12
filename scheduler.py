@@ -4,7 +4,7 @@
 ##
 ## Platane is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Lesser General Public License as
-## published bythe Free Software Foundation, either version 3 of the
+## published by the Free Software Foundation, either version 3 of the
 ## License, or (at your option) any later version.
 ##
 ## Platane is distributed in the hope that it will be useful,
@@ -16,12 +16,17 @@
 ## License along with Platane.
 ## If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, time, timedelta
+# Logic preparing the scheduling calculation, delegating it to optimization algorithm and
+# preparing the result data structure for visualization.
+
+from datetime import date, timedelta
 import visualize
 import simplex
 import re
+import logging
 from copy import copy, deepcopy
-from pprint import pprint
+
+log = logging.getLogger('platane.scheduler')
 
 debug = False
 
@@ -33,30 +38,33 @@ month=2
 offset=0
 
 '''
-Calculate a schedule for the given tasks.
+Calculate a schedule_items for the given tasks. Parameter tasks is a list of task objects (attributes dict).
 Returns a result structure: {
 start: <date>,
-slots: [ ],
-schedule : [
+slots_total: [ ],
+schedule_items : [
 { task : <taskname>,
 slots : [ ] }
 ]
+Slots are list of float between 0.0 and 1.0, representing a fraction of day.
 '''
 def schedule_tasks(tasks, period=week, resolution=day, work=True):
     task_dict = {}
     for i in tasks:
         task_dict[i['name']] = i
-    original_task_dict = deepcopy(task_dict)
+    # avoid to modify the actual task objects
+    original_task_dict = deepcopy(task_dict)    
     process_super_tasks(task_dict)
     remove_overlap(task_dict, lambda t: 'absence' in t and t['absence'] )
     process_groups(task_dict)
     tasks = task_dict.values()    
     start_date, end_date, slots, category_items = itemize(tasks, resolution, work)
-    s = {}
+    schedule = {}
     w = {}
     all_items = {} # store all generated items for later sorting
     base_slots = copy(slots) # slots for calculating discrete load
     updated_slots = copy(slots)
+    # Schedule categories one after eachother (i.e. absences first)
     for category in sorted(category_items.keys()):
         items = category_items[category]
         all_items.update(items)
@@ -64,19 +72,18 @@ def schedule_tasks(tasks, period=week, resolution=day, work=True):
             actual_slots = base_slots
         else:
             actual_slots = updated_slots
-        sched, week_effort_limit = schedule(items, original_task_dict, actual_slots, slot_size(resolution, work), start_date, end_date, resolution)
+        sched, week_effort_limit = schedule_items(items, original_task_dict, actual_slots, slot_size(resolution, work), start_date, end_date, resolution)
         updated_slots = actual_slots
-        s.update(sched)
+        schedule.update(sched)
         w.update(week_effort_limit)
     result = []
     # sort the items and calculate target effort for load-based tasks
-    split_treated = set()
-    for name in sort_schedule(all_items.values(), s):
+    for name in sort_schedule(all_items.values(), schedule):
         if all_items[name]['effort'] == 0:
             effort = sum([ t[1] for t in w[name] ])
-            result.append( [name, s[name], effort, sum(s[name]), task_dict[name] ])
+            result.append( [name, schedule[name], effort, sum(schedule[name]), task_dict[name] ])
         else:
-            result.append( [name, s[name], all_items[name]['effort'], sum(s[name]), task_dict[name] ])
+            result.append( [name, schedule[name], all_items[name]['effort'], sum(schedule[name]), task_dict[name] ])
     return start_date, end_date, updated_slots, result
     
     
@@ -92,11 +99,11 @@ def merge_slots(slots, updated_slots):
 '''
 Sort the items in order of appearance. Returns the name list.
 '''
-def sort_schedule(items, schedule):
+def sort_schedule(items, schedule_items):
     s = []
     for i in items:
         j = -1
-        slots = schedule[i['name']]
+        slots = schedule_items[i['name']]
         start = -1
         end = 0
         for j in range(len(slots)):
@@ -111,18 +118,18 @@ def sort_schedule(items, schedule):
 '''
 Schedule the given items into the slots, updates the slots
 '''
-def schedule(items, tasks, slots, size, start_date, end_date, resolution):
+def schedule_items(items, tasks, slots, size, start_date, end_date, resolution):
     sorted_items = sorted( list(items.values()), key=lambda item: (item['from'], -item['load'], item['to']))
     week_effort_limit, super_task_limit = max_week_effort(items, tasks, slots, start_date, end_date, resolution)
     f, A, b, edges = generate_matrix(sorted_items, slots, size, week_effort_limit, super_task_limit, resolution)
     optimum = calculate(f, A, b, resolution)
-    s = {}
+    schedule = {}
     for name in items.keys():
-        s[name] = [0]*len(slots)
+        schedule[name] = [0]*len(slots)
     for i in range(0, len(edges)):
-        s[edges[i][0]][edges[i][1]]=optimum[i]
+        schedule[edges[i][0]][edges[i][1]]=optimum[i]
         slots[edges[i][1]] = slots[edges[i][1]]-optimum[i]
-    return s, week_effort_limit
+    return schedule, week_effort_limit
     
 '''
 Prepare the Ax <= b matrix and vector. Also provide the corresponding edges (task, slot)
@@ -166,7 +173,7 @@ def generate_matrix(items, slots, size, week_effort_limit, super_task_limit, res
             for week_effort in week_efforts:
                 line = [0]*n
                 if resolution==day:
-                    for wd in range(week_effort[0]):
+                    for wd in range(week_effort[0]): #@UnusedVariable
                         if d >= item['from'] and d <= item['to']:
                             line[wp] = 1.0
                             if super_task_name:
@@ -198,21 +205,27 @@ def generate_matrix(items, slots, size, week_effort_limit, super_task_limit, res
         A.append(line)
         b.append(slots[i])
     # supertask constraints
-    for super_task, lines in super_task_lines.iteritems():
+    for lines in super_task_lines.values():
         for line_effort in lines:
             if sum(line_effort[0]) > 0:
                 A.append(line_effort[0])
                 b.append(line_effort[1])
     return f, A, b, edges
     
+'''
+Weight given to a day. Decreases in time.
+'''    
 def time_weight(value, t, size):
     return 1 + value * float( size - t ) / size
-    
+
+'''
+Delegate calculation to the solver.
+'''    
 def calculate(f, A, b, resolution):
     return solvers[solver](f, A, b, resolution)
     
 '''
-Delegate to simplex algorithm to optimize the planning.
+Delegate to builtin simplex algorithm to optimize the planning.
 '''
 def calculate_simplex(f, A, b, resolution):
     fr=[ -x for x in f ]
@@ -241,12 +254,13 @@ def calculate_lpsolve(f, A, b, resolution):
     lpsolve('delete_lp', lp)    
     return result
     
+# Configuration of solver to use    
 solver = 'builtin'
 try:
-    from lpsolve55 import lpsolve, IMPORTANT, LE
+    from lpsolve55 import lpsolve, IMPORTANT, LE #@UnresolvedImport
     solver = 'lpsolve'
 except Exception, e:
-    print "Cannot use lpsolve: "+str(e)
+    log.warn("Cannot use lpsolve: "+str(e))
         
 solvers = { 'builtin' : calculate_simplex,
             'lpsolve' : calculate_lpsolve }       
@@ -329,7 +343,7 @@ def itemize(tasks, resolution, work=True):
     return start, end, slots, items
 
 '''
-Calculate maximum effort per week according to load and super-task in the future.
+Calculate maximum effort per week according to load and super-task.
 
 Returns in a dict per load-based item a list of tuples
 corresponding to each week: (slot_start, nb_days, max_effort).
@@ -393,14 +407,13 @@ def get_super_task_for_day(super_task_name, d, tasks):
                 return task   
 
 '''
-Move dates of overlapping tasks. Remove them if necessary.
+Move dates of overlapping tasks of the same group. Remove them if necessary.
 '''
 def remove_overlap(task_dict, criteria, started_wins=True):
     l = []
     for t in task_dict.values():
         if criteria(t):
             l.append( (t['from'], t) )
-    new_end = date(2100, 01, 01)
     previous = None
     to_delete=set()
     for t in sorted(l):
@@ -435,7 +448,8 @@ def process_groups(task_dict):
         remove_overlap(task_dict, lambda t: t['name'].split('[')[0].strip()==g)
 
 '''
-Change the date of super-tasks according to sub-task dates.
+Change the date of super-tasks according to sub-task dates to avoid overlapping and make sub-tasks
+consume the time reserved by the super-task. 
 '''
 def process_super_tasks(tasks):
     names = tasks.keys()
@@ -536,12 +550,15 @@ def slot_size(resolution, work=True):
         return 5.0 if work else 7.0
         
 '''
-Renders a schedule
+Renders a schedule_items by delegating to visualizer.
 '''
-def render(tasks, vars={'qs':{}, 'context':'/', 'path':'/'}, resolution=week, expand=[]):
+def render(tasks, variables={'qs':{}, 'context':'/', 'path':'/'}, resolution=week, expand=[]):
     dates, slots, sched = prepare_schedule(tasks, resolution)
-    return visualize.render(dates, slots, sched, vars, resolution, expand)
+    return visualize.render(dates, slots, sched, variables, resolution, expand)
 
+'''
+Prepare a schedule_items structure ready for visualization.
+'''
 def prepare_schedule(tasks, resolution=day, work=True):
     tasks = clean_tasks(tasks)
     start, end, slots, sched = schedule_tasks(tasks, resolution=resolution)
@@ -556,7 +573,7 @@ def prepare_schedule(tasks, resolution=day, work=True):
 '''
 Transforms a week-based list into a day-based list.
 '''
-def dailify(list, start, end, work, proportional):
+def dailify(week_list, start, end, work, proportional):
     result=[]
     i=0
     if work:
@@ -570,9 +587,9 @@ def dailify(list, start, end, work, proportional):
         else:
             ratio = week_size
         if ratio>0:
-            result.extend([ list[i] / float(ratio)]*days)
+            result.extend([ week_list[i] / float(ratio)]*days)
         else:
-            result.extend([ list[i] / week_size]*days)
+            result.extend([ week_list[i] / week_size]*days)
         i+=1
     return result
         
@@ -582,29 +599,17 @@ Complete data and removes inconsistencies in tasks
 def clean_tasks(tasks):
     good_tasks = []
     for task in tasks:
-        if not task.has_key('from') or not task['from']:
-            task['from'] = date.today()
-        if ('effort' in task and float(task['effort']) > 0) or ( 'load' in task and float(task['load']) > 0):
-            good_tasks.append(task)
-        if 'effort' in task:
-            task['effort'] = float(task['effort'])
-        if 'load' in task:
-            task['load'] = float(task['load'])
-            if task['load'] < 0:
-                task['load'] = None
-            if task['load'] > 1:
-                task['load'] = min(1.0, task['load'] / 100.0)
+        if task:
+            if not task.has_key('from') or not task['from']:
+                task['from'] = date.today()
+            if ('effort' in task and float(task['effort']) > 0) or ( 'load' in task and float(task['load']) > 0):
+                good_tasks.append(task)
+            if 'effort' in task:
+                task['effort'] = float(task['effort'])
+            if 'load' in task:
+                task['load'] = float(task['load'])
+                if task['load'] < 0:
+                    task['load'] = None
+                if task['load'] > 1:
+                    task['load'] = min(1.0, task['load'] / 100.0)
     return good_tasks
-        
-if __name__ == '__main__':
-            
-    tasks = [
-        { 'name' : 'absence', 'priority':-1, 'effort': 3, 'from':date(2011, 05, 24), 'to':date(2011, 05, 26) },
-        { 'name' : 'architecture', 'effort': 5, 'from':date(2011, 05, 18), 'to':date(2011, 06, 8) },
-        { 'name' : 'management', 'load': 0.1, 'from':date(2011, 05, 18), 'to':date(2011, 06, 10) },
-        { 'name' : 'project1', 'effort': 3.5, 'from':date(2011, 05, 20), 'to':date(2011, 06, 13) },
-        { 'name' : 'project2', 'priority': 1, 'effort': 3.5, 'from':date(2011, 05, 23), 'to':date(2011, 06, 13) },
-        { 'name' : 'partial time', 'priority': -1, 'load': 0.2, 'from':date(2011, 05, 20), 'to':date(2011, 06, 2) }]
-        
-    print prepare_schedule(tasks)
-
